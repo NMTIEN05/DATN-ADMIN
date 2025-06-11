@@ -1,0 +1,121 @@
+import React from 'react';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+import {
+  Button,
+  Space,
+  Table,
+  Image,
+  Modal,
+  Typography,
+} from 'antd';
+import Column from 'antd/es/table/Column';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+
+const { confirm } = Modal;
+
+const ListCategory = () => {
+  const nav = useNavigate();
+  const queryClient = useQueryClient();
+
+  const { data: dataSource, isLoading } = useQuery({
+    queryKey: ['category'],
+    queryFn: async () => {
+      const { data } = await axios.get('http://localhost:8888/api/category');
+      return data;
+    },
+  });
+
+  const { mutate } = useMutation({
+    mutationFn: async (id: string) => {
+      await axios.delete(`http://localhost:8888/api/category/${id}`);
+      toast.success('Xoá danh mục thành công!');
+      queryClient.invalidateQueries({ queryKey: ['category'] });
+    },
+  });
+
+  const handleDelete = (id: string) => {
+    confirm({
+      title: 'Bạn có chắc chắn muốn xoá danh mục này không?',
+      okText: 'Xoá',
+      okType: 'danger',
+      cancelText: 'Huỷ',
+      onOk() {
+        mutate(id);
+      },
+    });
+  };
+
+  return (
+    <div>
+      <Typography.Title level={3} className="text-indigo-600 drop-shadow-sm">
+        Danh Sách Danh Mục
+      </Typography.Title>
+
+      <div className="text-left mb-5">
+        <Button
+          type="primary"
+          onClick={() => nav('/dashboard/category/create')}
+        >
+          Thêm mới
+        </Button>
+      </div>
+
+      <Table
+        dataSource={dataSource}
+        rowKey="_id"
+        loading={isLoading}
+        pagination={{ pageSize: 5 }}
+      >
+        <Column
+          title="STT"
+          key="index"
+          render={(_, __, index) => index + 1}
+        />
+        <Column title="Tên" dataIndex="name" key="name" />
+        <Column
+          title="Mô tả"
+          dataIndex="description"
+          key="description"
+        />
+        <Column
+          title="Ảnh"
+          dataIndex="imageUrl"
+          key="image"
+          render={(text) => (
+            <Image src={text} alt="Ảnh" width={60} height={60} />
+          )}
+        />
+        <Column
+          title="Chức năng"
+          key="actions"
+          render={(_, record: any) => (
+            <Space>
+              <Button
+                type="primary"
+                onClick={() =>
+                  nav(`/dashboard/category/edit/${record._id}`)
+                }
+              >
+                Sửa
+              </Button>
+              <Button
+                danger
+                onClick={() => handleDelete(record._id)}
+              >
+                Xoá
+              </Button>
+            </Space>
+          )}
+        />
+      </Table>
+    </div>
+  );
+};
+
+export default ListCategory;
