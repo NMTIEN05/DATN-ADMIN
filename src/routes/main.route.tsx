@@ -2,8 +2,10 @@ import { createBrowserRouter } from "react-router-dom";
 import Dashbroad from "../components/common/Dashbroad";
 import Content from "../components/layouts/MainLayout";
 
-import UserForm from "../pages/userList";
-import UserList from "../pages/userList";
+
+import ListCategory from "../pages/Category/ListCategory";
+import CreateCategory from "../pages/Category/CreateCategory";
+import UpdateCategory from "../pages/Category/UpdateCategory";
 
 export const router = createBrowserRouter([
   {
@@ -15,9 +17,18 @@ export const router = createBrowserRouter([
         element: <Content />, // Layout con có <Outlet />
         children: [
           {
-            path: "users/add",    // /dashboard/users
-            element: <UserList />, // Trang users
+            path: "category",    
+            element: <ListCategory />, 
           },
+          {
+            path: "category/create",
+            element: <CreateCategory />, 
+          },
+          {
+            path: "category/edit/:id",
+            element: <UpdateCategory />, // Sử dụng lại CreateCategory cho cập nhật
+          }
+
         ],
       },
     ],
