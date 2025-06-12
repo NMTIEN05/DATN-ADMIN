@@ -12,6 +12,7 @@ import {
   AreaChartOutlined,
   EditOutlined,
   CommentOutlined,
+  FolderOutlined,
 } from '@ant-design/icons';
 import React, { useState } from 'react';
 
@@ -34,6 +35,9 @@ const Dashbroad: React.FC = () => {
             { key: '/dashboard', icon: <AreaChartOutlined />, label: 'Phân Tích' },
             { key: '/dashboard/users', icon: <UserOutlined />, label: 'Người dùng' },
             { key: '/dashboard/category', icon: <FolderOpenOutlined />, label: 'Danh Mục' },
+            { key: '/dashboard/capacity', icon: <FolderOutlined />, label: 'Dung Lượng' },
+
+            
             { key: '/dashboard/uploads', icon: <MobileOutlined />, label: 'Sản Phẩm' },
             { key: '/dashboard/uploads', icon: <ShoppingOutlined />, label: 'Giỏ Hàng' },
             { key: '/dashboard/uploads', icon: <EditOutlined />, label: 'Bài Viết' },

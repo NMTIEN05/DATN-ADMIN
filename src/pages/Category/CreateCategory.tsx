@@ -9,7 +9,7 @@ import axios from "axios";
 import type { UploadFile } from "antd/es/upload/interface";
 import ImageUpload from "../../components/common/ImageUpload";
 
-const CreateCategory: React.FC = () => {
+const CreateCategory = () => {
   const [form] = Form.useForm();
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
