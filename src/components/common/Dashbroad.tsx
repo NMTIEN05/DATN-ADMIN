@@ -1,31 +1,112 @@
-// src/layouts/DashLayout.tsx
+import React, { useState } from 'react';
 import { Layout, Menu } from 'antd';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   UserOutlined,
-  VideoCameraOutlined,
-  UploadOutlined,
-  MobileOutlined,
-  FolderOpenOutlined,
-  ShoppingCartOutlined,
-  ShoppingOutlined,
   AreaChartOutlined,
+  FolderOpenOutlined,
+  MobileOutlined,
+  ShoppingOutlined,
   EditOutlined,
   CommentOutlined,
-  FolderOutlined,
 } from '@ant-design/icons';
-import React, { useState } from 'react';
 
 const { Sider, Content } = Layout;
 
-const Dashbroad: React.FC = () => {
+const DashLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const selectedKey = location.pathname;
+  const openKey = selectedKey.startsWith('/dashboard/capacity') || selectedKey.startsWith('/dashboard/color')
+    ? 'product-attributes'
+    : '';
+
+  const menuItems = [
+    {
+      key: '/dashboard',
+      icon: <AreaChartOutlined />,
+      label: 'Phân Tích',
+    },
+    {
+      key: '/dashboard/users',
+      icon: <UserOutlined />,
+      label: 'Người dùng',
+    },
+    {
+      key: '/dashboard/category',
+      icon: <FolderOpenOutlined />,
+      label: 'Danh Mục',
+    },
+    {
+      key: 'product-attributes',
+      icon: <AppstoreOutlined />,
+      label: 'Thuộc tính',
+      children: [
+        {
+          key: '/dashboard/capacity',
+          icon: <MenuUnfoldOutlined />,
+          label: 'Dung Lượng',
+        },
+        {
+          key: '/dashboard/color',
+          icon: <BgColorsOutlined />,
+          label: 'Màu',
+        },
+      ],
+    },
+    {
+      key: '/dashboard/product',
+      icon: <MobileOutlined />,
+      label: 'Sản Phẩm',
+    },
+    {
+      key: '/dashboard/uploads1',
+      icon: <ShoppingOutlined />,
+      label: 'Giỏ Hàng',
+    },
+    {
+      key: '/dashboard/uploads2',
+      icon: <EditOutlined />,
+      label: 'Bài Viết',
+    },
+    {
+      key: '/dashboard/upload1s',
+      icon: <CommentOutlined />,
+      label: 'Bình Luận',
+    },
+  ];
 
   return (
-    <Layout style={{ minHeight: '100vh'  }}>
-      <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed}>
-        <div style={{ height: 60, margin: 16, background: 'rgba(255, 255, 255, 0.3)' }} />
+    <Layout style={{ minHeight: '100vh' }}>
+      <Sider
+        collapsible
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
+        width={230}
+        style={{ background: '#001529' }}
+      >
+        <div
+  style={{
+    height: 60,
+    margin: 16,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }}
+>
+  <img
+    src="http://www.datwebdigital.com/DWD/wp-content/uploads/2012/06/logo-design.jpg"
+    alt="Logo"
+    style={{
+      maxHeight: 40,
+      maxWidth: '100%',
+      objectFit: 'contain',
+    }}
+  />
+</div>
+
         <Menu
           theme="dark"
           mode="inline"
@@ -35,9 +116,6 @@ const Dashbroad: React.FC = () => {
             { key: '/dashboard', icon: <AreaChartOutlined />, label: 'Phân Tích' },
             { key: '/dashboard/users', icon: <UserOutlined />, label: 'Người dùng' },
             { key: '/dashboard/category', icon: <FolderOpenOutlined />, label: 'Danh Mục' },
-            { key: '/dashboard/capacity', icon: <FolderOutlined />, label: 'Dung Lượng' },
-
-            
             { key: '/dashboard/uploads', icon: <MobileOutlined />, label: 'Sản Phẩm' },
             { key: '/dashboard/uploads', icon: <ShoppingOutlined />, label: 'Giỏ Hàng' },
             { key: '/dashboard/uploads', icon: <EditOutlined />, label: 'Bài Viết' },
@@ -48,21 +126,20 @@ const Dashbroad: React.FC = () => {
         />
       </Sider>
 
-      <Layout style={{ flex: 1}}>
+      <Layout>
         <Content
           style={{
             padding: 16,
             background: '#fff',
             height: '100%',
-             width: '100%' ,
             overflow: 'auto',
           }}
         >
-          <Outlet/>
+          <Outlet />
         </Content>
       </Layout>
     </Layout>
   );
 };
 
-export default Dashbroad;
+export default DashLayout;

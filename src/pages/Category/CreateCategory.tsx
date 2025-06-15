@@ -35,7 +35,7 @@ const CreateCategory = () => {
         navigate("/dashboard/category");
       }, 1500);
     } catch (err: any) {
-      console.error(err?.response?.data || err.message);
+     
       message.error("Tạo danh mục thất bại!");
     }
   };
