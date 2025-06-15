@@ -1,16 +1,16 @@
 import React from 'react';
 import {
-  useMutation,
   useQuery,
+  useMutation,
   useQueryClient,
 } from '@tanstack/react-query';
 import {
+  Table,
   Button,
   Space,
-  Table,
-  Image,
   Modal,
   Typography,
+  Tag,
 } from 'antd';
 import Column from 'antd/es/table/Column';
 import axios from 'axios';
@@ -19,29 +19,31 @@ import { toast } from 'react-toastify';
 
 const { confirm } = Modal;
 
-const ListCategory = () => {
-  const nav = useNavigate();
+const ListColor = () => {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  // Fetch data
   const { data: dataSource, isLoading } = useQuery({
-    queryKey: ['category'],
+    queryKey: ['colors'],
     queryFn: async () => {
-      const { data } = await axios.get('http://localhost:8888/api/category');
+      const { data } = await axios.get('http://localhost:8888/api/color');
       return data;
     },
   });
 
+  // Delete mutation
   const { mutate } = useMutation({
     mutationFn: async (id: string) => {
-      await axios.delete(`http://localhost:8888/api/category/${id}`);
-      toast.success('Xoá danh mục thành công!');
-      queryClient.invalidateQueries({ queryKey: ['category'] });
+      await axios.delete(`http://localhost:8888/api/color/${id}`);
+      toast.success('Xoá màu thành công!');
+      queryClient.invalidateQueries({ queryKey: ['colors'] });
     },
   });
 
   const handleDelete = (id: string) => {
     confirm({
-      title: 'Bạn có chắc chắn muốn xoá danh mục này không?',
+      title: 'Bạn có chắc chắn muốn xoá màu này không?',
       okText: 'Xoá',
       okType: 'danger',
       cancelText: 'Huỷ',
@@ -53,14 +55,10 @@ const ListCategory = () => {
 
   return (
     <div>
-           <h2 className="text-3xl font-bold text-indigo-600 mb-5"> Danh Sách Danh Mục </h2>
-
+      <h2 className="text-3xl font-bold text-indigo-600 mb-5">Danh sách màu</h2>
 
       <div className="text-left mb-5">
-        <Button
-          type="primary"
-          onClick={() => nav('/dashboard/category/create')}
-        >
+        <Button type="primary" onClick={() => navigate('/dashboard/colors/create')}>
           Thêm mới
         </Button>
       </div>
@@ -76,20 +74,7 @@ const ListCategory = () => {
           key="index"
           render={(_, __, index) => index + 1}
         />
-        <Column title="Tên" dataIndex="name" key="name" />
-        <Column
-          title="Mô tả"
-          dataIndex="description"
-          key="description"
-        />
-        <Column
-          title="Ảnh"
-          dataIndex="imageUrl"
-          key="image"
-          render={(text) => (
-            <Image src={text} alt="Ảnh" width={60} height={60} />
-          )}
-        />
+        <Column title="Tên màu" dataIndex="name" key="name" render={(text: string) => <Tag>{text}</Tag>} />
         <Column
           title="Chức năng"
           key="actions"
@@ -97,9 +82,7 @@ const ListCategory = () => {
             <Space>
               <Button
                 type="primary"
-                onClick={() =>
-                  nav(`/dashboard/category/edit/${record._id}`)
-                }
+                onClick={() => navigate(`/dashboard/colors/edit/${record._id}`)}
               >
                 Sửa
               </Button>
@@ -117,4 +100,4 @@ const ListCategory = () => {
   );
 };
 
-export default ListCategory;
+export default ListColor;

@@ -9,7 +9,7 @@ import axios from "axios";
 import type { UploadFile } from "antd/es/upload/interface";
 import ImageUpload from "../../components/common/ImageUpload";
 
-const CreateCategory: React.FC = () => {
+const CreateCategory = () => {
   const [form] = Form.useForm();
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
@@ -35,7 +35,7 @@ const CreateCategory: React.FC = () => {
         navigate("/dashboard/category");
       }, 1500);
     } catch (err: any) {
-      console.error(err?.response?.data || err.message);
+     
       message.error("Tạo danh mục thất bại!");
     }
   };
