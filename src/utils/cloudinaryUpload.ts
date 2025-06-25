@@ -1,22 +1,24 @@
 export const uploadImageToCloudinary = async (file: File): Promise<string> => {
+  if (!file) throw new Error("Không có file để upload");
+
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", "nmtien"); // 👈 Thay bằng preset bạn tạo
-  const cloudName = "dhy3a5frj"; // 👈 Thay bằng tên Cloudinary của bạn
+  formData.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+  formData.append("cloud_name", import.meta.env.VITE_CLOUDINARY_CLOUD_NAME);
 
-  const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-    {
-      method: "POST",
-      body: formData,
-    }
-  );
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+  const url = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    body: formData,
+  });
 
   const data = await res.json();
-  console.log("📸 Kết quả Cloudinary:", data);
 
-  if (!data.secure_url) {
-    throw new Error("Upload ảnh thất bại");
+  if (!res.ok || !data.secure_url) {
+    console.error("Cloudinary error:", data);
+    throw new Error("Upload ảnh thất bại!");
   }
 
   return data.secure_url;

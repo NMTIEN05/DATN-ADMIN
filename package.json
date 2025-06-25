@@ -32,6 +32,7 @@
     "antd": "^5.25.2",
     "antd-img-crop": "^4.25.0",
     "axios": "^1.9.0",
+    "lucide-react": "^0.523.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.6.0",

@@ -1,47 +1,50 @@
 import React from 'react';
 import {
-  useMutation,
   useQuery,
+  useMutation,
   useQueryClient,
 } from '@tanstack/react-query';
 import {
   Button,
-  Space,
   Table,
-  Image,
+  Space,
   Modal,
+  Typography,
+  Image,
   Popconfirm,
 } from 'antd';
 import Column from 'antd/es/table/Column';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { toast } from 'react-toastify';
 
 const { confirm } = Modal;
 
-const ListCategory = () => {
-  const nav = useNavigate();
+const ListProductGroup = () => {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  // ✅ Lấy danh sách dòng sản phẩm
   const { data: dataSource, isLoading } = useQuery({
-    queryKey: ['category'],
+    queryKey: ['productGroup'],
     queryFn: async () => {
-      const { data } = await axios.get('http://localhost:8888/api/category');
+      const { data } = await axios.get('http://localhost:8888/api/productGroup');
       return data;
     },
   });
 
+  // ✅ Xoá dòng sản phẩm
   const { mutate } = useMutation({
     mutationFn: async (id: string) => {
-      await axios.delete(`http://localhost:8888/api/category/${id}`);
-      toast.success('Xoá danh mục thành công!');
-      queryClient.invalidateQueries({ queryKey: ['category'] });
+      await axios.delete(`http://localhost:8888/api/productGroup/${id}`);
+      toast.success('Xoá dòng sản phẩm thành công!');
+      queryClient.invalidateQueries({ queryKey: ['productGroup'] });
     },
   });
 
   const handleDelete = (id: string) => {
     confirm({
-      title: 'Bạn có chắc chắn muốn xoá danh mục này không?',
+      title: 'Bạn có chắc chắn muốn xoá dòng sản phẩm này không?',
       okText: 'Xoá',
       okType: 'danger',
       cancelText: 'Huỷ',
@@ -53,14 +56,10 @@ const ListCategory = () => {
 
   return (
     <div>
-           <h2 className="text-3xl font-bold text-indigo-600 mb-5"> Danh Sách Danh Mục </h2>
-
+      <h2 className="text-3xl font-bold text-indigo-600 mb-5">Danh sách dòng sản phẩm</h2>
 
       <div className="text-left mb-5">
-        <Button
-          type="primary"
-          onClick={() => nav('/dashboard/category/create')}
-        >
+        <Button type="primary" onClick={() => navigate('/dashboard/capacity/create')}>
           Thêm mới
         </Button>
       </div>
@@ -71,39 +70,26 @@ const ListCategory = () => {
         loading={isLoading}
         pagination={{ pageSize: 5 }}
       >
-        <Column
-          title="STT"
-          key="index"
-          render={(_, __, index) => index + 1}
-        />
-        <Column title="Tên" dataIndex="name" key="name" />
-        <Column
-          title="Mô tả"
-          dataIndex="description"
-          key="description"
-        />
+        <Column title="STT" render={(_, __, index) => index + 1} />
         <Column
           title="Ảnh"
           dataIndex="imageUrl"
-          key="image"
-          render={(text) => (
-            <Image src={text} alt="Ảnh" width={60} height={60} />
-          )}
+          render={(url: string) => <Image src={url} width={60} height={60} />}
         />
+        <Column title="Tên dòng" dataIndex="name" />
+        <Column title="Thương hiệu" dataIndex="brand" />
+        <Column title="Mô tả ngắn" dataIndex="shortDescription" />
         <Column
           title="Chức năng"
-          key="actions"
           render={(_, record: any) => (
             <Space>
               <Button
                 type="primary"
-                onClick={() =>
-                  nav(`/dashboard/category/edit/${record._id}`)
-                }
+                onClick={() => navigate(`/dashboard/capacity/edit/${record._id}`)}
               >
                 Sửa
               </Button>
-              <Popconfirm
+               <Popconfirm
               title="Bạn có chắc muốn xoá không?"
               onConfirm={() => handleDelete(record._id)}
               okText="Xoá"
@@ -122,4 +108,4 @@ const ListCategory = () => {
   );
 };
 
-export default ListCategory;
+export default ListProductGroup;

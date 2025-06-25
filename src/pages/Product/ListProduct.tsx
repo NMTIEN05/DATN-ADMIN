@@ -1,361 +1,131 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
-  Table,
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+import {
   Button,
-  Popconfirm,
-  message,
-  Card,
-  Input,
-  InputNumber,
+  Table,
   Space,
+  Modal,
+  Image,
+  Popconfirm,
 } from "antd";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+import VariantTable from "./components/VariantTable";
+import type { Product } from "../../types/product/product.type";
 
-interface Variant {
-  color: string;
-  storage: string;
-  price: number;
-  stock: number;
-}
+const { confirm } = Modal;
 
-interface Product {
-  _id: string;
-  name: string;
-  description: string;
-  categoryId: {
-    name: string;
-  };
-  variants: Variant[];
-}
-
-const ProductList = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [editingVariant, setEditingVariant] = useState<Record<string, Variant[]>>({});
-  const [expandedRowKeys, setExpandedRowKeys] = useState<readonly string[]>([]);
+const ListProduct = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const fetchProducts = async () => {
-    try {
-      const { data } = await axios.get("http://localhost:8888/api/product");
-      setProducts(data);
-    } catch (error) {
-      console.error("Lỗi khi lấy danh sách sản phẩm:", error);
-    }
-  };
+  // ✅ Lấy danh sách sản phẩm
+const {
+  data: products = [],
+  isLoading,
+  refetch, // 👈 lấy refetch ở đây
+} = useQuery({
+  queryKey: ["products"],
+  queryFn: async () => {
+    const { data } = await axios.get("http://localhost:8888/api/product");
+    return data;
+  },
+});
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
 
-  const handleDeleteProduct = async (id: string) => {
-    try {
+  // ✅ Xoá sản phẩm
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
       await axios.delete(`http://localhost:8888/api/product/${id}`);
-      message.success("Xoá sản phẩm thành công!");
-      fetchProducts();
-    } catch (error) {
-      message.error("Xoá thất bại!");
-    }
-  };
+      toast.success("Xoá sản phẩm thành công!");
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
 
-  const handleVariantChange = (
-    productId: string,
-    index: number,
-    field: keyof Variant,
-    value: any
-  ) => {
-    setEditingVariant((prev) => {
-      const newVariants = [...(prev[productId] || [])];
-      newVariants[index] = { ...newVariants[index], [field]: value };
-      return { ...prev, [productId]: newVariants };
+  const handleDelete = (id: string) => {
+    confirm({
+      title: "Bạn có chắc chắn muốn xoá sản phẩm này không?",
+      okText: "Xoá",
+      okType: "danger",
+      cancelText: "Huỷ",
+      onOk: () => deleteMutation.mutate(id),
     });
   };
-
-  const handleEditClick = (productId: string, variants: Variant[]) => {
-    setEditingVariant((prev) => ({
-      ...prev,
-      [productId]: [...variants],
-    }));
-    setExpandedRowKeys((prev) => [...new Set([...prev, productId])]);
-  };
-
-  const handleSaveVariants = async (productId: string) => {
-    try {
-      const newVariants = editingVariant[productId];
-      await axios.patch(`http://localhost:8888/api/product/${productId}`, {
-        variants: newVariants,
-      });
-      message.success("Cập nhật biến thể thành công!");
-      setEditingVariant((prev) => {
-        const clone = { ...prev };
-        delete clone[productId];
-        return clone;
-      });
-      fetchProducts();
-    } catch (err) {
-      message.error("Cập nhật thất bại!");
-    }
-  };
-
-  const handleDeleteVariant = async (productId: string, index: number) => {
-    try {
-      const currentVariants = editingVariant[productId] ||
-        products.find((p) => p._id === productId)?.variants || [];
-
-      if (currentVariants.length <= 1) {
-        message.warning("Sản phẩm phải có ít nhất 1 biến thể!");
-        return;
-      }
-
-      const newVariants = currentVariants.filter((_, i) => i !== index);
-
-      if (editingVariant[productId]) {
-        setEditingVariant((prev) => ({
-          ...prev,
-          [productId]: newVariants,
-        }));
-      } else {
-        await axios.patch(`http://localhost:8888/api/product/${productId}`, {
-          variants: newVariants,
-        });
-        message.success("Xoá biến thể thành công!");
-        fetchProducts();
-      }
-    } catch (error) {
-      message.error("Xoá biến thể thất bại!");
-    }
-  };
-
-  const handleAddVariant = (productId: string) => {
-    const currentVariants = editingVariant[productId] ||
-      products.find((p) => p._id === productId)?.variants || [];
-
-    const newVariant: Variant = {
-      color: "",
-      storage: "",
-      price: 0,
-      stock: 0,
-    };
-
-    const newVariants = [...currentVariants, newVariant];
-
-    setEditingVariant((prev) => ({
-      ...prev,
-      [productId]: newVariants,
-    }));
-    setExpandedRowKeys((prev) => [...new Set([...prev, productId])]);
-  };
-
-  const expandedRowRender = (record: Product) => {
-    const variants = editingVariant[record._id] || record.variants;
-    const isEditing = !!editingVariant[record._id];
-
-    return (
-      <>
-        <Table
-          dataSource={variants}
-          pagination={false}
-          rowKey={(_, index) => `${record._id}-${index}`}
-          columns={[
-            {
-              title: "Màu",
-              dataIndex: "color",
-              render: (text, _, index) => (
-                <Input
-                  value={text}
-                  placeholder="Nhập màu sắc"
-                  onChange={(e) =>
-                    handleVariantChange(record._id, index, "color", e.target.value)
-                  }
-                  disabled={!isEditing}
-                />
-              ),
-            },
-            {
-              title: "Dung lượng",
-              dataIndex: "storage",
-              render: (text, _, index) => (
-                <Input
-                  value={text}
-                  placeholder="Nhập dung lượng"
-                  onChange={(e) =>
-                    handleVariantChange(record._id, index, "storage", e.target.value)
-                  }
-                  disabled={!isEditing}
-                />
-              ),
-            },
-            {
-              title: "Giá",
-              dataIndex: "price",
-              render: (text, _, index) => (
-                <InputNumber
-                  value={text}
-                  min={0}
-                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
-                  onChange={(value) =>
-                    handleVariantChange(record._id, index, "price", value)
-                  }
-                  disabled={!isEditing}
-                  style={{ width: '100%' }}
-                />
-              ),
-            },
-            {
-              title: "Tồn kho",
-              dataIndex: "stock",
-              render: (text, _, index) => (
-                <InputNumber
-                  value={text}
-                  min={0}
-                  onChange={(value) =>
-                    handleVariantChange(record._id, index, "stock", value)
-                  }
-                  disabled={!isEditing}
-                  style={{ width: '100%' }}
-                />
-              ),
-            },
-            {
-              title: "Hành động",
-              key: "variantActions",
-              render: (_, __, index) => (
-                <Space>
-                  <Popconfirm
-                    title="Bạn có chắc muốn xoá biến thể này?"
-                    onConfirm={() => handleDeleteVariant(record._id, index)}
-                    okText="Xoá"
-                    cancelText="Huỷ"
-                    okType="danger"
-                  >
-                    <Button danger size="small" disabled={variants.length <= 1}>
-                      🗑️ Xoá
-                    </Button>
-                  </Popconfirm>
-                </Space>
-              ),
-            },
-          ]}
-        />
-        <div className="mt-3">
-          <Space>
-            {isEditing ? (
-              <>
-                <Button type="primary" onClick={() => handleSaveVariants(record._id)}>
-                  💾 Lưu biến thể
-                </Button>
-                <Button
-                  onClick={() =>
-                    setEditingVariant((prev) => {
-                      const clone = { ...prev };
-                      delete clone[record._id];
-                      return clone;
-                    })
-                  }
-                >
-                  ❌ Hủy
-                </Button>
-                <Button type="dashed" onClick={() => handleAddVariant(record._id)}>
-                  ➕ Thêm biến thể
-                </Button>
-              </>
-            ) : (
-              <Button onClick={() => handleEditClick(record._id, record.variants)}>
-                ✏️ Chỉnh sửa biến thể
-              </Button>
-            )}
-          </Space>
-        </div>
-      </>
-    );
-  };
-
-  const columns = [
-    {
-      title: "Tên sản phẩm",
-      dataIndex: "name",
-    },
-    {
-      title: "Mô tả",
-      dataIndex: "description",
-      render: (text: string) => (
-        <span title={text}>
-          {text ? text.slice(0, 50) + (text.length > 50 ? '...' : '') : 'Chưa có mô tả'}
-        </span>
-      ),
-    },
-    {
-      title: "Danh mục",
-      dataIndex: "categoryId",
-      render: (category: any) => category?.name || "Không rõ",
-    },
-    {
-      title: "Số biến thể",
-      render: ( record: Product) => (
-        <span className="font-semibold text-blue-600">
-          {record.variants?.length || 0}
-        </span>
-      ),
-    },
-    {
-      title: "Hành động",
-      render: ( record: Product) => (
-        <Space>
-          <Button type="link" onClick={() => navigate(`/dashboard/product/edit/${record._id}`)}>
-            ✏️ Sửa
-          </Button>
-          <Popconfirm
-            title="Xoá sản phẩm"
-            onConfirm={() => handleDeleteProduct(record._id)}
-            okText="Xoá"
-            cancelText="Huỷ"
-            okType="danger"
-          >
-            <Button type="link" danger>
-              🗑️ Xoá
-            </Button>
-          </Popconfirm>
-          <Button type="link" onClick={() => navigate(`/product/${record._id}`)}>
-            👁️ Xem
-          </Button>
-        </Space>
-      ),
-    },
-  ];
 
   return (
     <div>
       <h2 className="text-3xl font-bold text-indigo-600 mb-5">Danh sách sản phẩm</h2>
-      <Card>
-        <div className="mb-4 flex justify-between items-center">
-          <Button type="primary" size="large" onClick={() => navigate("/dashboard/product/create")}>➕ Thêm sản phẩm</Button>
-          <div className="text-gray-500">
-            Tổng: <span className="font-semibold">{products.length}</span> sản phẩm
-          </div>
-        </div>
 
-        <Table
-          rowKey="_id"
-          dataSource={products}
-          columns={columns}
-          expandable={{
-            expandedRowRender,
-            expandedRowKeys,
-            onExpandedRowsChange: (keys) => setExpandedRowKeys(keys as string[]),
-            rowExpandable: (record) => record.variants?.length > 0,
-          }}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} sản phẩm`,
-          }}
-          scroll={{ x: 1000 }}
+      <div className="text-left mb-5">
+        <Button type="primary" onClick={() => navigate("/dashboard/product/create")}>
+          Thêm mới
+        </Button>
+      </div>
+
+      <Table
+        dataSource={products}
+        rowKey="_id"
+        loading={isLoading}
+        expandable={{
+          expandedRowRender: (record: Product) => (
+            <VariantTable
+              product={record}
+              variants={record.variants}
+              editingVariant={{}}
+              setEditingVariant={() => {}}
+              fetchProducts={refetch} // ✅ truyền hàm để load lại khi xoá/sửa
+              colors={[]} // nếu cần lọc màu thì truyền danh sách
+            />
+          ),
+          defaultExpandAllRows: false,
+        }}
+        pagination={{ pageSize: 5 }}
+      >
+        <Table.Column title="Tên sản phẩm" dataIndex="title" />
+        <Table.Column title="Seri" dataIndex="groupId" render={(group) => group?.name} />
+        <Table.Column
+          title="Ảnh"
+          dataIndex="imageUrl"
+          render={(url: string) => <Image src={url} width={60} height={60} />}
         />
-      </Card>
+        <Table.Column
+          title="Giá mặc định"
+          dataIndex="priceDefault"
+          render={(price: number) => price.toLocaleString() + "₫"}
+        />
+        <Table.Column title="Mô tả" dataIndex="description" />
+        <Table.Column
+          title="Chức năng"
+          render={(_, record: Product) => (
+            <Space>
+              <Button
+                type="primary"
+                onClick={() => navigate(`/dashboard/product/edit/${record._id}`)}
+              >
+                Sửa
+              </Button>
+              <Popconfirm
+                title="Bạn có chắc muốn xoá không?"
+                onConfirm={() => handleDelete(record._id)}
+                okText="Xoá"
+                cancelText="Huỷ"
+                placement="bottomRight"
+              >
+                <Button type="link" danger>
+                  Xoá
+                </Button>
+              </Popconfirm>
+            </Space>
+          )}
+        />
+      </Table>
     </div>
   );
 };
 
-export default ProductList;
+export default ListProduct;

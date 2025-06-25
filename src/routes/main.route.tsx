@@ -6,16 +6,19 @@ import ListCategory from "../pages/Category/ListCategory";
 import CreateCategory from "../pages/Category/CreateCategory";
 import UpdateCategory from "../pages/Category/UpdateCategory";
 
-import ListCapacity from "../pages/Capacity/ListCapacity";
-import CreateCapacity from "../pages/Capacity/CreateCapacity";
-import UpdateCapacity from "../pages/Capacity/EditCapacity";
+
 
 import CreateProduct from "../pages/Product/CreateProduct";
-import ProductList from "../pages/Product/ListProduct";
+// import ProductList from "../pages/Product/ListProduct";
 
 import CreateColer from "../pages/Coler/CreateColer";
 import ListColor from "../pages/Coler/ListColer";
 import EditColor from "../pages/Coler/EditColer";
+import CreateProductGroup from "../pages/Capacity/CreateProductGroup";
+import ListProductGroup from "../pages/Capacity/ListProductGroup";
+import EditProductGroup from "../pages/Capacity/EditProductGroup";
+import ProductList from "../pages/Product/ListProduct";
+import EditProduct from "../pages/Product/EditProduct";
 
 export const router = createBrowserRouter([
   {
@@ -43,25 +46,29 @@ export const router = createBrowserRouter([
           // Capacity routes
           {
             path: "capacity",
-            element: <ListCapacity />,
+            element: <ListProductGroup />,
           },
           {
             path: "capacity/create",
-            element: <CreateCapacity />,
+            element: <CreateProductGroup />,
           },
           {
             path: "capacity/edit/:id",
-            element: <UpdateCapacity />,
+            element: <EditProductGroup />,
           },
 
-          // Product routes
           {
             path: "product",
             element: <ProductList />,
           },
+
           {
             path: "product/create",
             element: <CreateProduct />,
+          },
+          {
+            path: "product/edit/:id",
+            element: <EditProduct />,
           },
 
           // Color routes

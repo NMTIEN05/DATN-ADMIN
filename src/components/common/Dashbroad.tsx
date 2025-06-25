@@ -9,6 +9,9 @@ import {
   ShoppingOutlined,
   EditOutlined,
   CommentOutlined,
+  AppstoreOutlined,
+  BgColorsOutlined,
+  MenuUnfoldOutlined,
 } from '@ant-design/icons';
 
 const { Sider, Content } = Layout;
@@ -20,8 +23,8 @@ const DashLayout: React.FC = () => {
 
   const selectedKey = location.pathname;
   const openKey = selectedKey.startsWith('/dashboard/capacity') || selectedKey.startsWith('/dashboard/color')
-    ? 'product-attributes'
-    : '';
+    ? ['product-attributes']
+    : [];
 
   const menuItems = [
     {
@@ -47,7 +50,7 @@ const DashLayout: React.FC = () => {
         {
           key: '/dashboard/capacity',
           icon: <MenuUnfoldOutlined />,
-          label: 'Dung Lượng',
+          label: 'Series Sản Phẩm',
         },
         {
           key: '/dashboard/color',
@@ -62,17 +65,17 @@ const DashLayout: React.FC = () => {
       label: 'Sản Phẩm',
     },
     {
-      key: '/dashboard/uploads1',
+      key: '/dashboard/cart',
       icon: <ShoppingOutlined />,
       label: 'Giỏ Hàng',
     },
     {
-      key: '/dashboard/uploads2',
+      key: '/dashboard/posts',
       icon: <EditOutlined />,
       label: 'Bài Viết',
     },
     {
-      key: '/dashboard/upload1s',
+      key: '/dashboard/comments',
       icon: <CommentOutlined />,
       label: 'Bình Luận',
     },
@@ -88,41 +91,35 @@ const DashLayout: React.FC = () => {
         style={{ background: '#001529' }}
       >
         <div
-  style={{
-    height: 60,
-    margin: 16,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  }}
->
-  <img
-    src="http://www.datwebdigital.com/DWD/wp-content/uploads/2012/06/logo-design.jpg"
-    alt="Logo"
-    style={{
-      maxHeight: 40,
-      maxWidth: '100%',
-      objectFit: 'contain',
-    }}
-  />
-</div>
+          style={{
+            height: 60,
+            margin: 16,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <img
+            src="http://www.datwebdigital.com/DWD/wp-content/uploads/2012/06/logo-design.jpg"
+            alt="Logo"
+            style={{
+              maxHeight: 40,
+              maxWidth: '100%',
+              objectFit: 'contain',
+            }}
+          />
+        </div>
 
         <Menu
           theme="dark"
           mode="inline"
-          defaultSelectedKeys={['/dashboard']}
-          onClick={({ key }) => navigate(key)}
-          items={[
-            { key: '/dashboard', icon: <AreaChartOutlined />, label: 'Phân Tích' },
-            { key: '/dashboard/users', icon: <UserOutlined />, label: 'Người dùng' },
-            { key: '/dashboard/category', icon: <FolderOpenOutlined />, label: 'Danh Mục' },
-            { key: '/dashboard/uploads', icon: <MobileOutlined />, label: 'Sản Phẩm' },
-            { key: '/dashboard/uploads', icon: <ShoppingOutlined />, label: 'Giỏ Hàng' },
-            { key: '/dashboard/uploads', icon: <EditOutlined />, label: 'Bài Viết' },
-            { key: '/dashboard/uploads', icon: <CommentOutlined />, label: 'Bài Viết' },
-
-
-          ]}
+          selectedKeys={[selectedKey]}
+          defaultOpenKeys={openKey}
+          onClick={({ key }) => {
+            if (!key.startsWith('/')) return;
+            navigate(key);
+          }}
+          items={menuItems}
         />
       </Sider>
 
