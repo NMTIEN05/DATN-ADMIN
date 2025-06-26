@@ -5,6 +5,7 @@ import { router } from './routes';
 import './App.css'
 import axios from 'axios';
 
+
 function App() {
   const { count: countFromStore } = useCountStore();
 
@@ -22,7 +23,9 @@ function App() {
 
   return (
     <>
+     
       <RouterProvider router={router} />
+      
     </>
   )
 }

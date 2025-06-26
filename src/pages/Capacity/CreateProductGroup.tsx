@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Form, Input, Button, Card, message } from "antd";
+import { Form, Input, Button, Card, message, Select } from "antd";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -9,27 +9,35 @@ import type { UploadFile } from "antd/es/upload/interface";
 const CreateProductGroup = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
-
+const [categories, setCategories] = useState<any[]>([]); // lưu danh sách category
   const [fileList, setFileList] = useState<UploadFile[]>([]);
-  const [imageFile, setImageFile] = useState<string>("");
-
-  useEffect(() => {
-    if (imageFile) {
-      form.setFieldsValue({ imageUrl: imageFile });
+  const [imageUrl, setImageUrl] = useState<string[]>([]);
+useEffect(() => {
+  const fetchCategories = async () => {
+    try {
+      const res = await axios.get("http://localhost:8888/api/category");
+      setCategories(res.data);
+    } catch (err) {
+      console.error("Lỗi lấy danh mục:", err);
     }
-  }, [imageFile]);
+  };
+
+  fetchCategories();
+}, []);
+
+
 
   const onFinish = async (values: any) => {
     try {
       const payload = {
         ...values,
-        imageUrl: imageFile,
+       imageUrl: imageUrl,
       };
 
       await axios.post("http://localhost:8888/api/productGroup", payload);
       toast.success("Tạo dòng sản phẩm thành công!");
       setTimeout(() => {
-        navigate("/dashboard/product-groups");
+        navigate("/dashboard/capacity");
       }, 1500);
     } catch (error: any) {
       console.error(error?.response?.data || error.message);
@@ -58,15 +66,28 @@ const CreateProductGroup = () => {
             <Input placeholder="Ví dụ: iphone-16" />
           </Form.Item>
 
-<Form.Item name="imageUrl" rules={[{ required: true, message: "Chọn ảnh!" }]}>
-  <ImageUpload
-    fileList={fileList}
-    setFileList={setFileList}
-    setImageFile={setImageFile}
-  />
+
+    {/* Ảnh chính của sản phẩm */}
+          <ImageUpload
+            fileList={fileList}
+            setFileList={setFileList}
+            setImageUrl={setImageUrl}
+            maxCount={5}
+          />
+
+         <Form.Item
+  label="Danh mục"
+  name="categoryId"
+  rules={[{ required: true, message: "Vui lòng chọn danh mục!" }]}
+>
+  <Select placeholder="Chọn danh mục">
+    {categories.map((cat) => (
+      <Select.Option key={cat._id} value={cat._id}>
+        {cat.name}
+      </Select.Option>
+    ))}
+  </Select>
 </Form.Item>
-
-
 
 
           <Form.Item label="Mô tả ngắn" name="shortDescription">

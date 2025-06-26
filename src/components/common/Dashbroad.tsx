@@ -45,7 +45,7 @@ const DashLayout: React.FC = () => {
     {
       key: 'product-attributes',
       icon: <AppstoreOutlined />,
-      label: 'Thuộc tính',
+      label: 'Sản Phẩm',
       children: [
         {
           key: '/dashboard/capacity',
@@ -53,17 +53,13 @@ const DashLayout: React.FC = () => {
           label: 'Series Sản Phẩm',
         },
         {
-          key: '/dashboard/color',
-          icon: <BgColorsOutlined />,
-          label: 'Màu',
-        },
-      ],
-    },
-    {
       key: '/dashboard/product',
       icon: <MobileOutlined />,
       label: 'Sản Phẩm',
     },
+      ],
+    },
+    
     {
       key: '/dashboard/cart',
       icon: <ShoppingOutlined />,

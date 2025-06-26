@@ -6,30 +6,43 @@ import ListCategory from "../pages/Category/ListCategory";
 import CreateCategory from "../pages/Category/CreateCategory";
 import UpdateCategory from "../pages/Category/UpdateCategory";
 
-
-
 import CreateProduct from "../pages/Product/CreateProduct";
-// import ProductList from "../pages/Product/ListProduct";
-
-import CreateColer from "../pages/Coler/CreateColer";
-import ListColor from "../pages/Coler/ListColer";
-import EditColor from "../pages/Coler/EditColer";
-import CreateProductGroup from "../pages/Capacity/CreateProductGroup";
-import ListProductGroup from "../pages/Capacity/ListProductGroup";
-import EditProductGroup from "../pages/Capacity/EditProductGroup";
 import ProductList from "../pages/Product/ListProduct";
 import EditProduct from "../pages/Product/EditProduct";
 
+import CreateProductGroup from "../pages/Capacity/CreateProductGroup";
+import ListProductGroup from "../pages/Capacity/ListProductGroup";
+import EditProductGroup from "../pages/Capacity/EditProductGroup";
+
+import ListUser from "../pages/User/ListUser";
+import Login from "../pages/Auth/Login";
+import Unauthorized from "../pages/Auth/Unauthorized";
+import ProtectedRoute from "../pages/Auth/ProtectedRoute";
+
+ // import middleware này
+
 export const router = createBrowserRouter([
   {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/unauthorized",
+    element: <Unauthorized />,
+  },
+  {
     path: "/dashboard",
-    element: <Dashbroad />, // Layout chính có <Outlet />
+    element: (
+      <ProtectedRoute allowedRoles={["admin", "staff"]}>
+        <Dashbroad />
+      </ProtectedRoute>
+    ),
     children: [
       {
-        path: "", // Route con trống, để chứa children
-        element: <Content />, // Layout con có <Outlet />
+        path: "",
+        element: <Content />,
         children: [
-          // Category routes
+          // Category
           {
             path: "category",
             element: <ListCategory />,
@@ -43,7 +56,7 @@ export const router = createBrowserRouter([
             element: <UpdateCategory />,
           },
 
-          // Capacity routes
+          // ProductGroup (Capacity)
           {
             path: "capacity",
             element: <ListProductGroup />,
@@ -57,11 +70,11 @@ export const router = createBrowserRouter([
             element: <EditProductGroup />,
           },
 
+          // Product
           {
             path: "product",
             element: <ProductList />,
           },
-
           {
             path: "product/create",
             element: <CreateProduct />,
@@ -71,18 +84,10 @@ export const router = createBrowserRouter([
             element: <EditProduct />,
           },
 
-          // Color routes
+          // User
           {
-            path: "color",
-            element: <ListColor />,
-          },
-          {
-            path: "color/create",
-            element: <CreateColer />,
-          },
-          {
-            path: "color/edit/:id",
-            element: <EditColor />,
+            path: "users",
+            element: <ListUser />,
           },
         ],
       },
