@@ -24,37 +24,50 @@ const EditProduct = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [groups, setGroups] = useState<any[]>([]);
 
-  useEffect(() => {
-    const fetchInitial = async () => {
-      try {
-        const [catRes, groupRes, productRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_PUBLIC_API_URL}api/category`),
-          axios.get(`${import.meta.env.VITE_PUBLIC_API_URL}api/productGroup`),
-          axios.get(`${import.meta.env.VITE_PUBLIC_API_URL}api/product/${id}`),
-        ]);
+useEffect(() => {
+  const fetchInitial = async () => {
+    try {
+      const [catRes, groupRes, productRes] = await Promise.all([
+        axios.get(`${import.meta.env.VITE_PUBLIC_API_URL}api/category`),
+        axios.get(`${import.meta.env.VITE_PUBLIC_API_URL}api/productGroup`),
+        axios.get(`${import.meta.env.VITE_PUBLIC_API_URL}api/product/${id}`),
+      ]);
 
-        setCategories(catRes.data);
-        setGroups(groupRes.data);
+      setCategories(catRes.data);
+      setGroups(groupRes.data);
 
-        const product = productRes.data;
-        setImageUrl(product.imageUrl);
-        form.setFieldsValue({
-          title: product.title,
-          slug: product.slug,
-          shortDescription: product.shortDescription,
-          description: product.description,
-          capacity: product.capacity,
-          categoryId: product.categoryId?._id,
-          groupId: product.groupId?._id,
-        });
-      } catch (err) {
-        message.error("Không thể tải dữ liệu sản phẩm");
-        console.error(err);
-      }
-    };
+      const product = productRes.data;
+      setImageUrl(product.imageUrl);
 
-    fetchInitial();
-  }, [id]);
+      // ✅ Convert imageUrl -> fileList để preview ảnh
+      const convertedFileList: UploadFile[] = (product.imageUrl || []).map(
+        (url: string, index: number) => ({
+          uid: `${index}`,
+          name: `Ảnh ${index + 1}`,
+          status: "done",
+          url,
+        })
+      );
+      setFileList(convertedFileList);
+
+      form.setFieldsValue({
+        title: product.title,
+        slug: product.slug,
+        shortDescription: product.shortDescription,
+        description: product.description,
+        capacity: product.capacity,
+        categoryId: product.categoryId?._id,
+        groupId: product.groupId?._id,
+      });
+    } catch (err) {
+      message.error("Không thể tải dữ liệu sản phẩm");
+      console.error(err);
+    }
+  };
+
+  fetchInitial();
+}, [id]);
+
 
   const onFinish = async (values: any) => {
     try {
