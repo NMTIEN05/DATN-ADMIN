@@ -16,13 +16,11 @@ const Login = () => {
         message.error("Dữ liệu đăng nhập không hợp lệ từ server.");
         return;
       }
-
       // Kiểm tra quyền
       if (!["admin", "staff"].includes(user.role)) {
         message.error("Bạn không có quyền truy cập trang quản trị.");
         return;
       }
-
       // Lưu vào localStorage
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
