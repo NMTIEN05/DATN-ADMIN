@@ -10,11 +10,13 @@ import {
   Form,
   Select,
   Switch,
+  Typography,
 } from "antd";
 import axios from "axios";
 import { toast } from "react-toastify";
 
 const { Option } = Select;
+const { Text } = Typography;
 
 interface User {
   _id: string;
@@ -72,7 +74,7 @@ const ListUser = () => {
   const handleUpdateUser = async () => {
     try {
       const values = await form.validateFields();
-        console.log("Đang cập nhật user với ID:", editingUser?._id);
+      console.log("Đang cập nhật user với ID:", editingUser?._id);
       await axios.put(
         `http://localhost:8888/api/auth/${editingUser?._id}`,
         values,
@@ -122,12 +124,6 @@ const ListUser = () => {
       key: "phone",
     },
     {
-      title: "Địa chỉ",
-      dataIndex: "address",
-      key: "address",
-      render: (text: string) => text || <i>Chưa cập nhật</i>,
-    },
-    {
       title: "Phân quyền",
       dataIndex: "role",
       key: "role",
@@ -137,10 +133,7 @@ const ListUser = () => {
         else if (role === "staff") color = "orange";
         else if (role === "user") color = "green";
         return (
-          <Tag
-            color={color}
-            style={{ fontWeight: "bold", textTransform: "uppercase" }}
-          >
+          <Tag color={color} style={{ fontWeight: "bold", textTransform: "uppercase" }}>
             {role}
           </Tag>
         );
