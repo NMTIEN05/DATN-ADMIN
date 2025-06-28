@@ -2,25 +2,100 @@ import { createBrowserRouter } from "react-router-dom";
 import Dashbroad from "../components/common/Dashbroad";
 import Content from "../components/layouts/MainLayout";
 
-import UserForm from "../pages/userList";
-import UserList from "../pages/userList";
+import ListCategory from "../pages/Category/ListCategory";
+import CreateCategory from "../pages/Category/CreateCategory";
+import UpdateCategory from "../pages/Category/UpdateCategory";
+
+import CreateProduct from "../pages/Product/CreateProduct";
+import ProductList from "../pages/Product/ListProduct";
+import EditProduct from "../pages/Product/EditProduct";
+
+import CreateProductGroup from "../pages/Capacity/CreateProductGroup";
+import ListProductGroup from "../pages/Capacity/ListProductGroup";
+import EditProductGroup from "../pages/Capacity/EditProductGroup";
+
+import ListUser from "../pages/User/ListUser";
+import Login from "../pages/Auth/Login";
+import Unauthorized from "../pages/Auth/Unauthorized";
+import ProtectedRoute from "../pages/Auth/ProtectedRoute";
+import AdminOrderList from "../pages/Order/ListOrder";
+
+ // import middleware này
 
 export const router = createBrowserRouter([
   {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/unauthorized",
+    element: <Unauthorized />,
+  },
+  {
     path: "/dashboard",
-    element: <Dashbroad />,   // Layout chính có <Outlet />
+    element: (
+      <ProtectedRoute allowedRoles={["admin", "staff"]}>
+        <Dashbroad />
+      </ProtectedRoute>
+    ),
     children: [
       {
-        path: "",             // Route con trống, để chứa children
-        element: <Content />, // Layout con có <Outlet />
+        path: "",
+        element: <Content />,
         children: [
+          // Category
           {
-            path: "users/add",    // /dashboard/users
-            element: <UserList />, // Trang users
+            path: "category",
+            element: <ListCategory />,
           },
+          {
+            path: "category/create",
+            element: <CreateCategory />,
+          },
+          {
+            path: "category/edit/:id",
+            element: <UpdateCategory />,
+          },
+
+          // ProductGroup (Capacity)
+          {
+            path: "capacity",
+            element: <ListProductGroup />,
+          },
+          {
+            path: "capacity/create",
+            element: <CreateProductGroup />,
+          },
+          {
+            path: "capacity/edit/:id",
+            element: <EditProductGroup />,
+          },
+
+          // Product
+          {
+            path: "product",
+            element: <ProductList />,
+          },
+          {
+            path: "product/create",
+            element: <CreateProduct />,
+          },
+          {
+            path: "product/edit/:id",
+            element: <EditProduct />,
+          },
+
+          // User
+          {
+            path: "users",
+            element: <ListUser />,
+          },
+          {
+            path:"orders",
+            element:<AdminOrderList />
+          }
         ],
       },
     ],
   },
 ]);
-
