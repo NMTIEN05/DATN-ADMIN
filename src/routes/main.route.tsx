@@ -19,6 +19,7 @@ import Login from "../pages/Auth/Login";
 import Unauthorized from "../pages/Auth/Unauthorized";
 import ProtectedRoute from "../pages/Auth/ProtectedRoute";
 import AdminOrderList from "../pages/Order/ListOrder";
+import DeletedProductList from "../pages/Product/components/DeletedProductList";
 
  // import middleware này
 
@@ -84,6 +85,11 @@ export const router = createBrowserRouter([
             path: "product/edit/:id",
             element: <EditProduct />,
           },
+          {
+  path: "product/deleted",
+  element: <DeletedProductList />,
+},
+
 
           // User
           {

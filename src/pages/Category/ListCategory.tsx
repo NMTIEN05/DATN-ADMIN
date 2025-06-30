@@ -27,7 +27,7 @@ const ListCategory = () => {
     queryKey: ['category'],
     queryFn: async () => {
       const { data } = await axios.get('http://localhost:8888/api/category');
-      return data;
+      return data.data;
     },
   });
 

@@ -58,8 +58,8 @@ const AdminOrderList: React.FC = () => {
     try {
       setLoading(true);
       const res = await axiosInstance.get("/orders");
-      if (Array.isArray(res.data)) {
-        setOrders(res.data);
+      if (Array.isArray(res.data.data)) {
+        setOrders(res.data.data);
       }
     } catch (err) {
       console.error(err);
@@ -85,7 +85,10 @@ const AdminOrderList: React.FC = () => {
   const handleUpdateOrder = async () => {
     try {
       const values = await form.validateFields();
-      const res = await axiosInstance.put(`/orders/${editingOrder?._id}/status`, values);
+      const res = await axiosInstance.put(
+        `/orders/${editingOrder?._id}/status`,
+        values
+      );
       message.success("Cập nhật thành công");
       fetchOrders();
       setIsModalVisible(false);
@@ -120,11 +123,21 @@ const AdminOrderList: React.FC = () => {
             const variant = item.variantId;
             const image = variant?.imageUrl?.[0];
             return (
-              <div key={item._id} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+              <div
+                key={item._id}
+                style={{ display: "flex", gap: 8, marginBottom: 8 }}
+              >
                 {image ? (
                   <Image width={40} src={image} />
                 ) : (
-                  <div style={{ width: 40, height: 40, background: "#eee", textAlign: "center" }}>
+                  <div
+                    style={{
+                      width: 40,
+                      height: 40,
+                      background: "#eee",
+                      textAlign: "center",
+                    }}
+                  >
                     No image
                   </div>
                 )}
@@ -141,7 +154,9 @@ const AdminOrderList: React.FC = () => {
     {
       title: "Tổng tiền",
       dataIndex: "totalAmount",
-      render: (amount: number) => <Text strong>{amount.toLocaleString()}₫</Text>,
+      render: (amount: number) => (
+        <Text strong>{amount.toLocaleString()}₫</Text>
+      ),
     },
     {
       title: "Địa chỉ",
@@ -153,22 +168,54 @@ const AdminOrderList: React.FC = () => {
       render: (method: string) => <Tag color="blue">{method}</Tag>,
     },
     {
-      title: "Trạng thái",
-      dataIndex: "status",
-      render: (_: any, record: Order) => (
-        <Button onClick={() => handleEditClick(record)}>Sửa</Button>
-      ),
-    },
-    {
       title: "Ngày tạo",
       dataIndex: "createdAt",
       render: (date: string) => new Date(date).toLocaleString(),
     },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      render: (_: any, record: Order) => {
+        let color = "default";
+        let text = record.status;
+
+        switch (record.status) {
+          case "pending":
+            color = "gold";
+            text = "Chờ xử lý";
+            break;
+          case "processing":
+            color = "blue";
+            text = "Đang giao";
+            break;
+          case "completed":
+            color = "green";
+            text = "Hoàn tất";
+            break;
+          case "cancelled":
+            color = "red";
+            text = "Đã huỷ";
+            break;
+        }
+
+        return (
+          <Space>
+            <Tag color={color}>{text}</Tag>
+            <Button onClick={() => handleEditClick(record)} type="link">
+              Sửa
+            </Button>
+          </Space>
+        );
+      },
+    },
+    
   ];
 
   return (
     <>
-      <h2 className="text-3xl font-bold text-indigo-600 mb-5">Danh sách đơn hàng</h2>
+      <h2 className="text-3xl font-bold text-indigo-600 mb-5">
+        Danh sách đơn hàng
+      </h2>
       <Table
         rowKey="_id"
         columns={columns}
@@ -186,7 +233,11 @@ const AdminOrderList: React.FC = () => {
         cancelText="Huỷ"
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="status" label="Trạng thái" rules={[{ required: true }]}> 
+          <Form.Item
+            name="status"
+            label="Trạng thái"
+            rules={[{ required: true }]}
+          >
             <Select>
               <Option value="pending">Chờ xử lý</Option>
               <Option value="processing">Đang giao</Option>
@@ -194,13 +245,7 @@ const AdminOrderList: React.FC = () => {
               <Option value="cancelled">Đã huỷ</Option>
             </Select>
           </Form.Item>
-          <Form.Item name="paymentMethod" label="Thanh toán" rules={[{ required: true }]}> 
-            <Select>
-              <Option value="COD">COD</Option>
-              <Option value="VNPAY">VNPay</Option>
-              <Option value="Stripe">Stripe</Option>
-            </Select>
-          </Form.Item>
+          
         </Form>
       </Modal>
     </>

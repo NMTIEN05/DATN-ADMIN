@@ -29,6 +29,9 @@ const ListProductGroup = () => {
     queryKey: ['productGroup'],
     queryFn: async () => {
       const { data } = await axios.get('http://localhost:8888/api/productGroup');
+      console.log("dataSource raw:", dataSource);
+console.log("dataSource?.data:", dataSource?.data);
+console.log("Is dataSource?.data an array?", Array.isArray(dataSource?.data));
       return data;
     },
   });
@@ -69,12 +72,14 @@ const ListProductGroup = () => {
         </Button>
       </div>
 
-      <Table
-        dataSource={dataSource}
-        rowKey="_id"
-        loading={isLoading}
-        pagination={{ pageSize: 5 }}
-      >
+    <Table
+  dataSource={ dataSource?.data || []}  // lấy đúng mảng data bên trong
+  rowKey="_id"
+  loading={isLoading}
+  pagination={{ pageSize: 5 }}
+  
+>
+
         <Column title="STT" render={(_, __, index) => index + 1} />
         <Column
           title="Ảnh"
@@ -94,6 +99,9 @@ const ListProductGroup = () => {
           dataIndex="categoryId"
           render={(category: any) => category?.name || 'Không rõ'}
         />
+        
+        <Column title="Dung Lượng" dataIndex="capacity" />
+
         <Column title="Mô tả ngắn" dataIndex="shortDescription" />
         <Column
           title="Chức năng"

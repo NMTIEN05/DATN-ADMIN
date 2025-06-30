@@ -13,10 +13,9 @@ interface Props {
   editingVariant: Record<string, Variant[]>;
   setEditingVariant: React.Dispatch<React.SetStateAction<Record<string, Variant[]>>>;
   fetchProducts: () => Promise<void>;
-  colors: any[]; // vẫn dùng màu sắc
-  storages?: any[]; // ✅ Đổi thành optional (có dấu ?)
+  colors: any[];
+  storages?: any[];
 }
-
 
 const ProductTable: React.FC<Props> = ({
   products,
@@ -28,7 +27,6 @@ const ProductTable: React.FC<Props> = ({
   setEditingVariant,
   fetchProducts,
   colors,
-  
 }) => {
   return (
     <Table
@@ -43,32 +41,24 @@ const ProductTable: React.FC<Props> = ({
             setEditingVariant={setEditingVariant}
             fetchProducts={fetchProducts}
             colors={colors}
-           
           />
         ),
         expandedRowKeys,
         onExpandedRowsChange: (expanded) => setExpandedRowKeys(expanded as string[]),
       }}
       columns={[
-        
-        {
-          title: "Tên sản phẩm",
-          dataIndex: "title",
-          key: "title",
-        },
         {
           title: "Slug",
           dataIndex: "slug",
           key: "slug",
         },
-       
         {
           title: "Giá mặc định",
           dataIndex: "priceDefault",
           key: "priceDefault",
           render: (price) => price?.toLocaleString() + "₫",
         },
-         {
+        {
           title: "Ảnh",
           dataIndex: "imageUrl",
           key: "imageUrl",
@@ -79,18 +69,17 @@ const ProductTable: React.FC<Props> = ({
           render: (_, record) => (
             <>
               <Button onClick={() => navigate(`/dashboard/product/edit/${record._id}`)}>Sửa</Button>
-              
-             <Popconfirm
-  title="Bạn có chắc muốn xoá không?"
-  onConfirm={() => onDeleteProduct(record._id)}
-  okText="Xoá"
-  cancelText="Huỷ"
-  placement="bottomRight" // ✅ đặt vị trí gần nút
->
-  <Button type="link" danger>
-    Xoá
-  </Button>
-</Popconfirm>
+              <Popconfirm
+                title="Bạn có chắc muốn xoá không?"
+                onConfirm={() => onDeleteProduct(record._id)}
+                okText="Xoá"
+                cancelText="Huỷ"
+                placement="bottomRight"
+              >
+                <Button type="link" danger>
+                  Xoá
+                </Button>
+              </Popconfirm>
             </>
           ),
         },
