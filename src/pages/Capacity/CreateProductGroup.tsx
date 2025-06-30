@@ -75,12 +75,12 @@ useEffect(() => {
             maxCount={5}
           />
 
-         <Form.Item
+        <Form.Item
   label="Danh mục"
   name="categoryId"
   rules={[{ required: true, message: "Vui lòng chọn danh mục!" }]}
 >
-  <Select placeholder="Chọn danh mục">
+  <Select placeholder="Chọn danh mục" allowClear>
     {categories.map((cat) => (
       <Select.Option key={cat._id} value={cat._id}>
         {cat.name}
@@ -88,6 +88,7 @@ useEffect(() => {
     ))}
   </Select>
 </Form.Item>
+
 
 
           <Form.Item label="Mô tả ngắn" name="shortDescription">

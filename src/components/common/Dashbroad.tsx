@@ -61,9 +61,9 @@ const DashLayout: React.FC = () => {
     },
     
     {
-      key: '/dashboard/cart',
+      key: '/dashboard/orders',
       icon: <ShoppingOutlined />,
-      label: 'Giỏ Hàng',
+      label: 'Đơn Hàng',
     },
     {
       key: '/dashboard/posts',

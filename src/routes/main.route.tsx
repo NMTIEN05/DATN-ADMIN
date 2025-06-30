@@ -18,6 +18,7 @@ import ListUser from "../pages/User/ListUser";
 import Login from "../pages/Auth/Login";
 import Unauthorized from "../pages/Auth/Unauthorized";
 import ProtectedRoute from "../pages/Auth/ProtectedRoute";
+import AdminOrderList from "../pages/Order/ListOrder";
 
  // import middleware này
 
@@ -89,6 +90,10 @@ export const router = createBrowserRouter([
             path: "users",
             element: <ListUser />,
           },
+          {
+            path:"orders",
+            element:<AdminOrderList />
+          }
         ],
       },
     ],

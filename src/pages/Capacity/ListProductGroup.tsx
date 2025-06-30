@@ -13,11 +13,11 @@ import {
   Image,
   Popconfirm,
 } from 'antd';
-import Column from 'antd/es/table/Column';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
+const { Column } = Table;
 const { confirm } = Modal;
 
 const ListProductGroup = () => {
@@ -40,8 +40,13 @@ console.log("Is dataSource?.data an array?", Array.isArray(dataSource?.data));
   const { mutate } = useMutation({
     mutationFn: async (id: string) => {
       await axios.delete(`http://localhost:8888/api/productGroup/${id}`);
+    },
+    onSuccess: () => {
       toast.success('Xoá dòng sản phẩm thành công!');
       queryClient.invalidateQueries({ queryKey: ['productGroup'] });
+    },
+    onError: () => {
+      toast.error('Xoá dòng sản phẩm thất bại!');
     },
   });
 
@@ -63,7 +68,7 @@ console.log("Is dataSource?.data an array?", Array.isArray(dataSource?.data));
 
       <div className="text-left mb-5">
         <Button type="primary" onClick={() => navigate('/dashboard/capacity/create')}>
-          Thêm mới
+          + Thêm mới
         </Button>
       </div>
 
@@ -79,10 +84,21 @@ console.log("Is dataSource?.data an array?", Array.isArray(dataSource?.data));
         <Column
           title="Ảnh"
           dataIndex="imageUrl"
-          render={(url: string) => <Image src={url} width={60} height={60} />}
+          render={(url: string) => (
+            <Image
+              src={url}
+              width={60}
+              height={60}
+              style={{ objectFit: 'cover', borderRadius: 8 }}
+            />
+          )}
         />
         <Column title="Tên dòng" dataIndex="name" />
-        <Column title="Thương hiệu" dataIndex="brand" />
+        <Column
+          title="Danh mục"
+          dataIndex="categoryId"
+          render={(category: any) => category?.name || 'Không rõ'}
+        />
         <Column title="Mô tả ngắn" dataIndex="shortDescription" />
         <Column
           title="Chức năng"
@@ -94,17 +110,17 @@ console.log("Is dataSource?.data an array?", Array.isArray(dataSource?.data));
               >
                 Sửa
               </Button>
-               <Popconfirm
-              title="Bạn có chắc muốn xoá không?"
-              onConfirm={() => handleDelete(record._id)}
-              okText="Xoá"
-              cancelText="Huỷ"
-              placement="bottomRight"
-            >
-              <Button type="link" danger>
-                Xoá
-              </Button>
-            </Popconfirm>
+              <Popconfirm
+                title="Bạn có chắc muốn xoá không?"
+                onConfirm={() => handleDelete(record._id)}
+                okText="Xoá"
+                cancelText="Huỷ"
+                placement="bottomRight"
+              >
+                <Button type="link" danger>
+                  Xoá
+                </Button>
+              </Popconfirm>
             </Space>
           )}
         />

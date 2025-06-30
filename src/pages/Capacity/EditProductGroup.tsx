@@ -8,14 +8,14 @@ import type { UploadFile } from "antd/es/upload/interface";
 
 const EditProductGroup = () => {
   const navigate = useNavigate();
-  const { id } = useParams(); // lấy id từ URL
+  const { id } = useParams();
   const [form] = Form.useForm();
 
   const [categories, setCategories] = useState<any[]>([]);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [imageUrl, setImageUrl] = useState<string[]>([]);
 
-  // Lấy categories
+  // Lấy danh sách danh mục
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -28,42 +28,57 @@ const EditProductGroup = () => {
     fetchCategories();
   }, []);
 
-  // Lấy thông tin nhóm sản phẩm theo ID
-useEffect(() => {
-  const fetchGroup = async () => {
-    try {
-      const res = await axios.get(`http://localhost:8888/api/productGroup/${id}`);
-     
-      const group = res.data;
-      
+  // Lấy dữ liệu nhóm sản phẩm theo ID
+  useEffect(() => {
+    const fetchGroup = async () => {
+      try {
+        const res = await axios.get(`http://localhost:8888/api/productGroup/${id}`);
+        const group = res.data;
 
-      setImageUrl(Array.isArray(group.imageUrl) ? group.imageUrl : [group.imageUrl]);
-      setFileList(
-        (Array.isArray(group.imageUrl) ? group.imageUrl : [group.imageUrl]).map((url: string, idx: number) => ({
-          uid: String(idx),
-          name: `image-${idx}`,
-          url,
-          status: "done",
-        }))
-      );
-      form.setFieldsValue(group);
-    } catch (err: any) {
-      if (err?.response?.status === 404) {
-        message.error("Không tìm thấy dòng sản phẩm");
-        navigate("/dashboard/capacity"); // đúng route cần chuyển hướng về
+        // Set ảnh
+        const urls = Array.isArray(group.imageUrl) ? group.imageUrl : [group.imageUrl];
+        setImageUrl(urls);
+        setFileList(
+          urls.map((url: string, idx: number) => ({
+            uid: String(idx),
+            name: `image-${idx}`,
+            url,
+            status: "done",
+          }))
+        );
 
-      } else {
-        message.error("Lỗi khi tải dữ liệu nhóm sản phẩm");
+        // Set giá trị form (chuyển categoryId từ object sang id nếu cần)
+        form.setFieldsValue({
+          ...group,
+          categoryId: group.categoryId?._id || group.categoryId,
+        });
+      } catch (err: any) {
+        if (err?.response?.status === 404) {
+          message.error("Không tìm thấy dòng sản phẩm");
+          navigate("/dashboard/capacity");
+        } else {
+          message.error("Lỗi khi tải dữ liệu nhóm sản phẩm");
+        }
       }
-    }
-  };
+    };
 
-  if (id) fetchGroup();
-}, [id]);
-
+    if (id) fetchGroup();
+  }, [id]);
 
   const onFinish = async (values: any) => {
+    console.log("📦 Submit data:", values);
+
     try {
+      if (!values.categoryId) {
+        message.error("Vui lòng chọn danh mục!");
+        return;
+      }
+
+      if (!imageUrl || imageUrl.length === 0 || imageUrl[0].startsWith("blob:")) {
+        message.error("Vui lòng tải ít nhất 1 ảnh hợp lệ!");
+        return;
+      }
+
       const payload = {
         ...values,
         imageUrl,
@@ -72,7 +87,6 @@ useEffect(() => {
       await axios.put(`http://localhost:8888/api/productGroup/${id}`, payload);
       toast.success("Cập nhật dòng sản phẩm thành công!");
       navigate("/dashboard/capacity");
-
     } catch (error: any) {
       console.error(error?.response?.data || error.message);
       message.error("Cập nhật dòng sản phẩm thất bại!");
@@ -81,7 +95,9 @@ useEffect(() => {
 
   return (
     <div>
-      <h2 className="text-3xl font-bold text-indigo-600 mb-5">Chỉnh sửa dòng sản phẩm</h2>
+      <h2 className="text-3xl font-bold text-indigo-600 mb-5">
+        Chỉnh sửa dòng sản phẩm
+      </h2>
       <Card>
         <Form form={form} layout="vertical" onFinish={onFinish}>
           <Form.Item
@@ -100,21 +116,23 @@ useEffect(() => {
             <Input placeholder="Ví dụ: iphone-16" />
           </Form.Item>
 
-          <ImageUpload
-            fileList={fileList}
-            setFileList={setFileList}
-            setImageUrl={setImageUrl}
-            maxCount={5}
-          />
+          <Form.Item label="Ảnh dòng sản phẩm" required>
+            <ImageUpload
+              fileList={fileList}
+              setFileList={setFileList}
+              setImageUrl={setImageUrl}
+              maxCount={5}
+            />
+          </Form.Item>
 
           <Form.Item
             label="Danh mục"
             name="categoryId"
             rules={[{ required: true, message: "Vui lòng chọn danh mục!" }]}
           >
-            <Select placeholder="Chọn danh mục">
+            <Select placeholder="Chọn danh mục" allowClear>
               {categories.map((cat) => (
-                <Select.Option key={cat.id} value={cat.id}>
+                <Select.Option key={cat._id} value={cat._id}>
                   {cat.name}
                 </Select.Option>
               ))}
