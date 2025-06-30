@@ -33,7 +33,7 @@ const {
   queryKey: ["products"],
   queryFn: async () => {
     const { data } = await axios.get("http://localhost:8888/api/product");
-    return data;
+    return data.data;
   },
 });
 

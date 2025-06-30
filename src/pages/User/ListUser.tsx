@@ -45,7 +45,7 @@ const ListUser = () => {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      setUsers(res.data);
+      setUsers(res.data.data);
     } catch (error) {
       console.error("Lỗi khi lấy danh sách user:", error);
       message.error("Lỗi khi lấy danh sách người dùng");

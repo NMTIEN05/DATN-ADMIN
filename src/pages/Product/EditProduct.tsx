@@ -33,11 +33,24 @@ const EditProduct = () => {
           axios.get(`${import.meta.env.VITE_PUBLIC_API_URL}api/product/${id}`),
         ]);
 
-        setCategories(catRes.data);
-        setGroups(groupRes.data);
+        setCategories(catRes.data.data);
+        setGroups(groupRes.data.data);
 
         const product = productRes.data;
+
         setImageUrl(product.imageUrl);
+
+        // ⚠️ Hiển thị ảnh cũ
+        const imageFiles: UploadFile[] = product.imageUrl.map(
+          (url: string, index: number) => ({
+            uid: `${index}`,
+            name: `image-${index}.jpg`,
+            status: "done",
+            url,
+          })
+        );
+        setFileList(imageFiles);
+
         form.setFieldsValue({
           title: product.title,
           slug: product.slug,
@@ -46,6 +59,7 @@ const EditProduct = () => {
           capacity: product.capacity,
           categoryId: product.categoryId?._id,
           groupId: product.groupId?._id,
+          price: product.price,
         });
       } catch (err) {
         message.error("Không thể tải dữ liệu sản phẩm");
@@ -58,7 +72,11 @@ const EditProduct = () => {
 
   const onFinish = async (values: any) => {
     try {
-      if (!imageUrl || imageUrl.length === 0 || imageUrl[0].startsWith("blob:")) {
+      if (
+        !imageUrl ||
+        imageUrl.length === 0 ||
+        imageUrl[0].startsWith("blob:")
+      ) {
         message.error("Vui lòng tải ít nhất 1 ảnh sản phẩm hợp lệ!");
         return;
       }
@@ -72,6 +90,7 @@ const EditProduct = () => {
         capacity: values.capacity,
         categoryId: values.categoryId,
         groupId: values.groupId,
+        price: values.price,
       };
 
       await axios.put(
@@ -82,7 +101,10 @@ const EditProduct = () => {
       toast.success("Cập nhật sản phẩm thành công!");
       setTimeout(() => navigate("/dashboard/product"), 1500);
     } catch (err: any) {
-      console.error("❌ Lỗi cập nhật sản phẩm: ", err.response?.data || err.message);
+      console.error(
+        "❌ Lỗi cập nhật sản phẩm: ",
+        err.response?.data || err.message
+      );
       message.error("Cập nhật thất bại!");
     }
   };
@@ -94,11 +116,19 @@ const EditProduct = () => {
       </h2>
       <Card>
         <Form form={form} layout="vertical" onFinish={onFinish}>
-          <Form.Item label="Tên sản phẩm" name="title" rules={[{ required: true }]}>
+          <Form.Item
+            label="Tên sản phẩm"
+            name="title"
+            rules={[{ required: true }]}
+          >
             <Input />
           </Form.Item>
 
-          <Form.Item label="Slug" name="slug" rules={[{ required: true }]}>
+          <Form.Item
+            label="Slug"
+            name="slug"
+            rules={[{ required: true }]}
+          >
             <Input />
           </Form.Item>
 
@@ -109,7 +139,25 @@ const EditProduct = () => {
             maxCount={5}
           />
 
-          <Form.Item label="Danh mục" name="categoryId" rules={[{ required: true }]}>
+          <Form.Item
+            label="Giá"
+            name="price"
+            rules={[{ required: true, message: "Vui lòng nhập giá sản phẩm" }]}
+          >
+            <InputNumber
+              className="w-full"
+              min={0}
+              formatter={(value) =>
+                `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+              }
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Danh mục"
+            name="categoryId"
+            rules={[{ required: true }]}
+          >
             <Select placeholder="Chọn danh mục">
               {categories.map((cat) => (
                 <Select.Option key={cat._id} value={cat._id}>
@@ -119,7 +167,11 @@ const EditProduct = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item label="Dòng sản phẩm" name="groupId" rules={[{ required: true }]}>
+          <Form.Item
+            label="Dòng sản phẩm"
+            name="groupId"
+            rules={[{ required: true }]}
+          >
             <Select placeholder="Chọn dòng sản phẩm">
               {groups.map((g) => (
                 <Select.Option key={g._id} value={g._id}>

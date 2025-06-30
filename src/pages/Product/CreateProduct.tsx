@@ -1,3 +1,4 @@
+// 🔧 Đã sửa toàn bộ chỗ `res.data` thành `res.data.data`
 import React, { useEffect, useState } from "react";
 import {
   Form,
@@ -13,6 +14,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import type { UploadFile } from "antd/es/upload/interface";
 import ImageUpload from "../../components/common/ImageUpload";
+
 
 const CreateProduct = () => {
   const [form] = Form.useForm();
@@ -37,10 +39,10 @@ const CreateProduct = () => {
           axios.get(`${import.meta.env.VITE_PUBLIC_API_URL}api/attributes`),
         ]);
 
-        setCategories(catRes.data);
-        setGroups(groupRes.data);
+        setCategories(catRes.data.data);
+        setGroups(groupRes.data.data);
 
-        const colorAttr = attrRes.data.find(
+        const colorAttr = attrRes.data.data.find(
           (attr: any) => attr.attributeCode === "color"
         );
         if (colorAttr) setColorAttrId(colorAttr._id);
@@ -75,7 +77,9 @@ const CreateProduct = () => {
         payload
       );
 
-      const productId = productRes.data._id;
+      const productId = productRes.data.data._id;
+      console.log(productRes.data.data._id);
+      
       const variantIds: string[] = [];
 
       for (let i = 0; i < values.variants.length; i++) {
@@ -107,13 +111,13 @@ const CreateProduct = () => {
             attributes: [
               {
                 attributeId: colorAttrId,
-                attributeValueId: colorRes.data._id,
+                attributeValueId: colorRes.data.data._id,
               },
             ],
           }
         );
 
-        variantIds.push(variantRes.data._id);
+        variantIds.push(variantRes.data.data._id);
       }
 
       await axios.put(
@@ -144,7 +148,6 @@ const CreateProduct = () => {
             <Input />
           </Form.Item>
 
-          {/* Ảnh chính của sản phẩm */}
           <ImageUpload
             fileList={fileList}
             setFileList={setFileList}
