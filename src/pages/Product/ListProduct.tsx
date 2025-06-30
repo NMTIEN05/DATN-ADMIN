@@ -61,11 +61,16 @@ const {
     <div>
       <h2 className="text-3xl font-bold text-indigo-600 mb-5">Danh sách sản phẩm</h2>
 
-      <div className="text-left mb-5">
-        <Button type="primary" onClick={() => navigate("/dashboard/product/create")}>
-          Thêm mới
-        </Button>
-      </div>
+     <div className="flex justify-between mb-5">
+  <Button type="primary" onClick={() => navigate("/dashboard/product/create")}>
+    Thêm mới
+  </Button>
+
+  <Button onClick={() => navigate("/dashboard/product/deleted")}>
+    Xem sản phẩm đã xoá
+  </Button>
+</div>
+
 
       <Table
         dataSource={products}
@@ -88,6 +93,8 @@ const {
       >
         <Table.Column title="Tên sản phẩm" dataIndex="title" />
         <Table.Column title="Seri" dataIndex="groupId" render={(group) => group?.name} />
+        <Table.Column title="Dung Lượng" dataIndex="capacity" />
+
         <Table.Column
           title="Ảnh"
           dataIndex="imageUrl"
@@ -99,6 +106,7 @@ const {
           render={(price: number) => price.toLocaleString() + "₫"}
         />
         <Table.Column title="Mô tả" dataIndex="description" />
+
         <Table.Column
           title="Chức năng"
           render={(_, record: Product) => (

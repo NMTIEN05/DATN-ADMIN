@@ -1,4 +1,3 @@
-// 🔧 Đã sửa toàn bộ chỗ `res.data` thành `res.data.data`
 import React, { useEffect, useState } from "react";
 import {
   Form,
@@ -15,7 +14,6 @@ import { toast } from "react-toastify";
 import type { UploadFile } from "antd/es/upload/interface";
 import ImageUpload from "../../components/common/ImageUpload";
 
-
 const CreateProduct = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
@@ -23,35 +21,33 @@ const CreateProduct = () => {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [imageUrl, setImageUrl] = useState<string[]>([]);
 
-  const [variantFileLists, setVariantFileLists] = useState<Record<number, UploadFile[]>>({});
-  const [variantImageUrls, setVariantImageUrls] = useState<Record<number, string[]>>({});
-
   const [categories, setCategories] = useState<any[]>([]);
-  const [groups, setGroups] = useState<any[]>([]);
-  const [colorAttrId, setColorAttrId] = useState<string>("");
+  const [allGroups, setAllGroups] = useState<any[]>([]);
+  const [filteredGroups, setFilteredGroups] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchInitial = async () => {
       try {
-        const [catRes, groupRes, attrRes] = await Promise.all([
+        const [catRes, groupRes] = await Promise.all([
           axios.get(`${import.meta.env.VITE_PUBLIC_API_URL}api/category`),
           axios.get(`${import.meta.env.VITE_PUBLIC_API_URL}api/productGroup`),
-          axios.get(`${import.meta.env.VITE_PUBLIC_API_URL}api/attributes`),
         ]);
 
         setCategories(catRes.data.data);
-        setGroups(groupRes.data.data);
-
-        const colorAttr = attrRes.data.data.find(
-          (attr: any) => attr.attributeCode === "color"
-        );
-        if (colorAttr) setColorAttrId(colorAttr._id);
+        setAllGroups(groupRes.data.data);
       } catch (err) {
+        console.error("❌ Lỗi fetch dữ liệu:", err);
         message.error("Không thể tải dữ liệu ban đầu");
       }
     };
     fetchInitial();
   }, []);
+
+  const handleCategoryChange = (categoryId: string) => {
+    const filtered = allGroups.filter((group) => group.categoryId?._id === categoryId);
+    setFilteredGroups(filtered);
+    form.setFieldValue("groupId", undefined);
+  };
 
   const onFinish = async (values: any) => {
     try {
@@ -60,77 +56,33 @@ const CreateProduct = () => {
         return;
       }
 
+      // 💡 Check thêm các trường bắt buộc
+      const requiredFields = ["title", "slug", "capacity", "priceDefault", "groupId", "categoryId"];
+      for (const field of requiredFields) {
+        if (!values[field]) {
+          message.error(`Trường "${field}" là bắt buộc`);
+          return;
+        }
+      }
+
       const payload = {
         title: values.title,
-        capacity: values.capacity,
         slug: values.slug,
-        description: values.description,
-        shortDescription: values.shortDescription,
-        imageUrl: imageUrl,
-        priceDefault: values.variants[0]?.price || 0,
+        capacity: values.capacity,
+        description: values.description || "",
+        shortDescription: values.shortDescription || "",
+        imageUrl,
+        priceDefault: values.priceDefault,
         categoryId: values.categoryId,
         groupId: values.groupId,
       };
 
-      const productRes = await axios.post(
-        `${import.meta.env.VITE_PUBLIC_API_URL}api/product`,
-        payload
-      );
-
-      const productId = productRes.data.data._id;
-      console.log(productRes.data.data._id);
-      
-      const variantIds: string[] = [];
-
-      for (let i = 0; i < values.variants.length; i++) {
-        const variant = values.variants[i];
-        const variantImages = variantImageUrls[i];
-        if (!variantImages || variantImages.length === 0 || variantImages[0].startsWith("blob:")) {
-          message.error(`Biến thể #${i + 1} chưa có ảnh hợp lệ!`);
-          return;
-        }
-
-        const colorRes = await axios.post(
-          `${import.meta.env.VITE_PUBLIC_API_URL}api/AttributeValue`,
-          {
-            value: variant.color,
-            valueCode: variant.color.toLowerCase().replace(/\s+/g, "-"),
-            attributeId: colorAttrId,
-          }
-        );
-
-        const variantRes = await axios.post(
-          `${import.meta.env.VITE_PUBLIC_API_URL}api/variants`,
-          {
-            name: `${values.title} - ${variant.color}`,
-            imageUrl: variantImages,
-            price: variant.price,
-            oldPrice: null,
-            stock: variant.stock,
-            productId: productId,
-            attributes: [
-              {
-                attributeId: colorAttrId,
-                attributeValueId: colorRes.data.data._id,
-              },
-            ],
-          }
-        );
-
-        variantIds.push(variantRes.data.data._id);
-      }
-
-      await axios.put(
-        `${import.meta.env.VITE_PUBLIC_API_URL}api/product/${productId}`,
-        {
-          variants: variantIds,
-        }
-      );
+      await axios.post(`${import.meta.env.VITE_PUBLIC_API_URL}api/product`, payload);
 
       toast.success("Tạo sản phẩm thành công!");
       setTimeout(() => navigate("/dashboard/product"), 1500);
     } catch (err: any) {
-      console.error("❌ Lỗi tạo sản phẩm: ", err.response?.data || err.message);
+      console.error("❌ Lỗi tạo sản phẩm:", err.response?.data || err.message);
       message.error("Tạo sản phẩm thất bại!");
     }
   };
@@ -156,7 +108,7 @@ const CreateProduct = () => {
           />
 
           <Form.Item label="Danh mục" name="categoryId" rules={[{ required: true }]}>
-            <Select placeholder="Chọn danh mục">
+            <Select placeholder="Chọn danh mục" onChange={handleCategoryChange}>
               {categories.map((cat) => (
                 <Select.Option key={cat._id} value={cat._id}>
                   {cat.name}
@@ -165,14 +117,22 @@ const CreateProduct = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item label="Dòng sản phẩm" name="groupId" rules={[{ required: true }]}>
+          <Form.Item label="Dòng sản phẩm (seri)" name="groupId" rules={[{ required: true }]}>
             <Select placeholder="Chọn dòng sản phẩm">
-              {groups.map((g) => (
+              {filteredGroups.map((g) => (
                 <Select.Option key={g._id} value={g._id}>
                   {g.name}
                 </Select.Option>
               ))}
             </Select>
+          </Form.Item>
+
+          <Form.Item label="Dung lượng" name="capacity" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+
+          <Form.Item label="Giá sản phẩm" name="priceDefault" rules={[{ required: true }]}>
+            <InputNumber style={{ width: "100%" }} min={0} />
           </Form.Item>
 
           <Form.Item label="Mô tả ngắn" name="shortDescription">
@@ -182,81 +142,6 @@ const CreateProduct = () => {
           <Form.Item label="Mô tả chi tiết" name="description">
             <Input.TextArea rows={4} />
           </Form.Item>
-
-          <Form.Item label="Dung lượng điện thoại" name="capacity">
-            <Input />
-          </Form.Item>
-
-          <Form.List
-            name="variants"
-            rules={[
-              {
-                validator: async (_, value) =>
-                  !value || value.length < 1
-                    ? Promise.reject(new Error("Thêm ít nhất 1 biến thể!"))
-                    : Promise.resolve(),
-              },
-            ]}
-          >
-            {(fields, { add, remove }) => (
-              <>
-                {fields.map(({ key, name, ...restField }, index) => (
-                  <Card
-                    key={key}
-                    title={`Biến thể #${index + 1}`}
-                    className="mb-6 border border-indigo-300 shadow-sm rounded-lg"
-                    extra={<Button danger onClick={() => remove(name)}>Xoá</Button>}
-                  >
-                    <Form.Item
-                      {...restField}
-                      name={[name, "color"]}
-                      label="Màu sắc"
-                      rules={[{ required: true }]}
-                    >
-                      <Input placeholder="VD: Đỏ, Xanh..." />
-                    </Form.Item>
-
-                    <Form.Item
-                      {...restField}
-                      name={[name, "price"]}
-                      label="Giá"
-                      rules={[{ required: true }]}
-                    >
-                      <InputNumber style={{ width: "100%" }} min={0} />
-                    </Form.Item>
-
-                    <Form.Item
-                      {...restField}
-                      name={[name, "stock"]}
-                      label="Tồn kho"
-                      rules={[{ required: true }]}
-                    >
-                      <InputNumber style={{ width: "100%" }} min={0} />
-                    </Form.Item>
-
-                    <Form.Item label="Ảnh biến thể" required>
-                      <ImageUpload
-                        fileList={variantFileLists[index] || []}
-                        setFileList={(files) =>
-                          setVariantFileLists((prev) => ({ ...prev, [index]: files }))
-                        }
-                        setImageUrl={(urls) =>
-                          setVariantImageUrls((prev) => ({ ...prev, [index]: urls }))
-                        }
-                        maxCount={5}
-                      />
-                    </Form.Item>
-                  </Card>
-                ))}
-
-                <Form.Item>
-                  <Button onClick={() => add()} block type="dashed">
-                    + Thêm biến thể
-                  </Button>
-                </Form.Item>
-              </>
-            )}
-          </Form.List>
 
           <Form.Item>
             <Button type="primary" htmlType="submit" block>

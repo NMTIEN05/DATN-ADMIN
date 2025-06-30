@@ -99,6 +99,9 @@ console.log("Is dataSource?.data an array?", Array.isArray(dataSource?.data));
           dataIndex="categoryId"
           render={(category: any) => category?.name || 'Không rõ'}
         />
+        
+        <Column title="Dung Lượng" dataIndex="capacity" />
+
         <Column title="Mô tả ngắn" dataIndex="shortDescription" />
         <Column
           title="Chức năng"

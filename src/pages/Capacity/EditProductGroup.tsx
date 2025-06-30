@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Form, Input, Button, Card, message, Select } from "antd";
+import {
+  Form,
+  Input,
+  Button,
+  Card,
+  message,
+  Select,
+} from "antd";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -15,12 +22,12 @@ const EditProductGroup = () => {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [imageUrl, setImageUrl] = useState<string[]>([]);
 
-  // Lấy danh sách danh mục
+  // 👉 Lấy danh mục
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await axios.get("http://localhost:8888/api/category");
-        setCategories(res.data);
+        setCategories(res.data?.data || []);
       } catch (err) {
         console.error("Lỗi lấy danh mục:", err);
       }
@@ -28,14 +35,13 @@ const EditProductGroup = () => {
     fetchCategories();
   }, []);
 
-  // Lấy dữ liệu nhóm sản phẩm theo ID
+  // 👉 Lấy dòng sản phẩm theo ID
   useEffect(() => {
     const fetchGroup = async () => {
       try {
         const res = await axios.get(`http://localhost:8888/api/productGroup/${id}`);
         const group = res.data;
 
-        // Set ảnh
         const urls = Array.isArray(group.imageUrl) ? group.imageUrl : [group.imageUrl];
         setImageUrl(urls);
         setFileList(
@@ -47,7 +53,6 @@ const EditProductGroup = () => {
           }))
         );
 
-        // Set giá trị form (chuyển categoryId từ object sang id nếu cần)
         form.setFieldsValue({
           ...group,
           categoryId: group.categoryId?._id || group.categoryId,
@@ -57,7 +62,7 @@ const EditProductGroup = () => {
           message.error("Không tìm thấy dòng sản phẩm");
           navigate("/dashboard/capacity");
         } else {
-          message.error("Lỗi khi tải dữ liệu nhóm sản phẩm");
+          message.error("Lỗi khi tải dữ liệu dòng sản phẩm");
         }
       }
     };
@@ -66,17 +71,13 @@ const EditProductGroup = () => {
   }, [id]);
 
   const onFinish = async (values: any) => {
-    console.log("📦 Submit data:", values);
-
     try {
       if (!values.categoryId) {
-        message.error("Vui lòng chọn danh mục!");
-        return;
+        return message.error("Vui lòng chọn danh mục!");
       }
 
       if (!imageUrl || imageUrl.length === 0 || imageUrl[0].startsWith("blob:")) {
-        message.error("Vui lòng tải ít nhất 1 ảnh hợp lệ!");
-        return;
+        return message.error("Vui lòng tải ít nhất 1 ảnh hợp lệ!");
       }
 
       const payload = {
@@ -95,9 +96,7 @@ const EditProductGroup = () => {
 
   return (
     <div>
-      <h2 className="text-3xl font-bold text-indigo-600 mb-5">
-        Chỉnh sửa dòng sản phẩm
-      </h2>
+      <h2 className="text-3xl font-bold text-indigo-600 mb-5">Chỉnh sửa dòng sản phẩm</h2>
       <Card>
         <Form form={form} layout="vertical" onFinish={onFinish}>
           <Form.Item
@@ -138,6 +137,7 @@ const EditProductGroup = () => {
               ))}
             </Select>
           </Form.Item>
+        
 
           <Form.Item label="Mô tả ngắn" name="shortDescription">
             <Input placeholder="Mô tả ngắn dòng sản phẩm" />
