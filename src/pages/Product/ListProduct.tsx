@@ -95,11 +95,18 @@ const {
         <Table.Column title="Seri" dataIndex="groupId" render={(group) => group?.name} />
         <Table.Column title="Dung Lượng" dataIndex="capacity" />
         
-        <Table.Column
-          title="Ảnh"
-          dataIndex="imageUrl"
-          render={(url: string) => <Image src={url} width={60} height={60} />}
-        />
+       <Table.Column
+  title="Ảnh"
+  dataIndex="imageUrl"
+  render={(urls: string[] = []) =>
+    urls.length > 0 ? (
+      <Image src={urls[0]} width={60} height={60} />
+    ) : (
+      <span>Không có ảnh</span>
+    )
+  }
+/>
+
         <Table.Column
           title="Giá mặc định"
           dataIndex="priceDefault"

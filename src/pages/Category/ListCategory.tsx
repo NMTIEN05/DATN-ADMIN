@@ -56,13 +56,16 @@ const ListCategory = () => {
            <h2 className="text-3xl font-bold text-indigo-600 mb-5"> Danh Sách Danh Mục </h2>
 
 
-      <div className="text-left mb-5">
+       <div className="flex justify-between mb-5">
         <Button
           type="primary"
           onClick={() => nav('/dashboard/category/create')}
         >
           Thêm mới
         </Button>
+        <Button onClick={() => nav("/dashboard/category/deleted")}>
+            Xem sản phẩm đã xoá
+          </Button>
       </div>
 
       <Table
@@ -82,14 +85,26 @@ const ListCategory = () => {
           dataIndex="description"
           key="description"
         />
-        <Column
-          title="Ảnh"
-          dataIndex="imageUrl"
-          key="image"
-          render={(text) => (
-            <Image src={text} alt="Ảnh" width={60} height={60} />
-          )}
-        />
+    <Column
+  title="Ảnh"
+  dataIndex="imageUrl"
+  key="image"
+  render={(images: string[] | string) => {
+    const firstImage =
+      Array.isArray(images) ? images[0] : images;
+
+    return (
+      <Image
+        src={firstImage}
+        alt="Ảnh"
+        width={60}
+        height={60}
+        style={{ objectFit: "cover", borderRadius: 4 }}
+      />
+    );
+  }}
+/>
+
         <Column
           title="Chức năng"
           key="actions"

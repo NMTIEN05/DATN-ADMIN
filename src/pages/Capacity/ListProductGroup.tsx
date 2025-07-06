@@ -66,10 +66,13 @@ console.log("Is dataSource?.data an array?", Array.isArray(dataSource?.data));
     <div>
       <h2 className="text-3xl font-bold text-indigo-600 mb-5">Danh sách dòng sản phẩm</h2>
 
-      <div className="text-left mb-5">
+      <div className="flex justify-between mb-5">
         <Button type="primary" onClick={() => navigate('/dashboard/capacity/create')}>
           + Thêm mới
         </Button>
+        <Button onClick={() => navigate("/dashboard/category/deleted")}>
+                    Xem sản phẩm đã xoá
+                  </Button>
       </div>
 
     <Table
@@ -81,18 +84,23 @@ console.log("Is dataSource?.data an array?", Array.isArray(dataSource?.data));
 >
 
         <Column title="STT" render={(_, __, index) => index + 1} />
-        <Column
-          title="Ảnh"
-          dataIndex="imageUrl"
-          render={(url: string) => (
-            <Image
-              src={url}
-              width={60}
-              height={60}
-              style={{ objectFit: 'cover', borderRadius: 8 }}
-            />
-          )}
-        />
+     <Column
+  title="Ảnh"
+  dataIndex="imageUrl"
+  render={(urls: string[] = []) => (
+    urls.length > 0 ? (
+      <Image
+        src={urls[0]}
+        width={60}
+        height={60}
+        style={{ objectFit: 'cover', borderRadius: 8 }}
+      />
+    ) : (
+      <span>Không có ảnh</span>
+    )
+  )}
+/>
+
         <Column title="Tên dòng" dataIndex="name" />
         <Column
           title="Danh mục"
