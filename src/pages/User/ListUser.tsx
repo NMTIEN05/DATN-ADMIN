@@ -20,6 +20,7 @@ const { Text } = Typography;
 
 interface User {
   _id: string;
+  isVerified: boolean;
   username: string;
   email: string;
   phone: string;
@@ -123,6 +124,16 @@ const ListUser = () => {
       dataIndex: "phone",
       key: "phone",
     },
+    {
+  title: "Xác thực Email",
+  dataIndex: "isVerified",
+  key: "isVerified",
+  render: (verified: boolean) => (
+    <Tag color={verified ? "green" : "red"}>
+      {verified ? "Đã xác thực" : "Chưa xác thực"}
+    </Tag>
+  ),
+},
     {
       title: "Phân quyền",
       dataIndex: "role",

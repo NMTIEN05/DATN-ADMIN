@@ -10,11 +10,46 @@ import {
   Select,
   Typography,
   Image,
+  Descriptions,
 } from "antd";
 import axiosInstance from "../../utils/axiosInstance";
+import { EditOutlined, EyeOutlined } from "@ant-design/icons";
 
 const { Option } = Select;
 const { Text } = Typography;
+
+const STATUS_FLOW: Record<string, string[]> = {
+  pending: ["processing", "cancelled"],
+  processing: ["ready_to_ship", "cancelled"],
+  ready_to_ship: ["shipped", "cancelled"],
+  shipped: ["delivered", "return_requested"],
+  delivered: ["return_requested"],
+  return_requested: ["returned", "cancelled"],
+  returned: [],
+  cancelled: [],
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  pending: "Chờ xác nhận",
+  processing: "Đang xử lý",
+  ready_to_ship: "Chờ giao hàng",
+  shipped: "Đang giao",
+  delivered: "Đã giao",
+  return_requested: "Yêu cầu trả hàng",
+  returned: "Đã hoàn trả",
+  cancelled: "Đã huỷ",
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  pending: "gold",
+  processing: "blue",
+  ready_to_ship: "cyan",
+  shipped: "purple",
+  delivered: "green",
+  return_requested: "orange",
+  returned: "volcano",
+  cancelled: "red",
+};
 
 interface Variant {
   _id: string;
@@ -51,7 +86,9 @@ const AdminOrderList: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isViewModalVisible, setIsViewModalVisible] = useState(false);
   const [form] = Form.useForm();
 
   const fetchOrders = async () => {
@@ -75,20 +112,14 @@ const AdminOrderList: React.FC = () => {
 
   const handleEditClick = (order: Order) => {
     setEditingOrder(order);
-    form.setFieldsValue({
-      status: order.status,
-      paymentMethod: order.paymentMethod,
-    });
+    form.setFieldsValue({ status: order.status });
     setIsModalVisible(true);
   };
 
   const handleUpdateOrder = async () => {
     try {
       const values = await form.validateFields();
-      const res = await axiosInstance.put(
-        `/orders/${editingOrder?._id}/status`,
-        values
-      );
+      await axiosInstance.put(`/orders/${editingOrder?._id}/status`, values);
       message.success("Cập nhật thành công");
       fetchOrders();
       setIsModalVisible(false);
@@ -115,43 +146,6 @@ const AdminOrderList: React.FC = () => {
       ),
     },
     {
-      title: "Sản phẩm",
-      dataIndex: "items",
-      render: (items: OrderItem[]) => (
-        <>
-          {items.map((item) => {
-            const variant = item.variantId;
-            const image = variant?.imageUrl?.[0];
-            return (
-              <div
-                key={item._id}
-                style={{ display: "flex", gap: 8, marginBottom: 8 }}
-              >
-                {image ? (
-                  <Image width={40} src={image} />
-                ) : (
-                  <div
-                    style={{
-                      width: 40,
-                      height: 40,
-                      background: "#eee",
-                      textAlign: "center",
-                    }}
-                  >
-                    No image
-                  </div>
-                )}
-                <div>
-                  <div>{variant?.name || "Không rõ tên sản phẩm"}</div>
-                  <small>Số lượng: {item.quantity}</small>
-                </div>
-              </div>
-            );
-          })}
-        </>
-      ),
-    },
-    {
       title: "Tổng tiền",
       dataIndex: "totalAmount",
       render: (amount: number) => (
@@ -159,56 +153,50 @@ const AdminOrderList: React.FC = () => {
       ),
     },
     {
-      title: "Địa chỉ",
-      dataIndex: "shippingAddress",
-    },
-    {
       title: "Thanh toán",
       dataIndex: "paymentMethod",
       render: (method: string) => <Tag color="blue">{method}</Tag>,
     },
     {
-      title: "Ngày tạo",
-      dataIndex: "createdAt",
-      render: (date: string) => new Date(date).toLocaleString(),
-    },
-    {
-      title: "Trạng thái",
-      dataIndex: "status",
-      render: (_: any, record: Order) => {
-        let color = "default";
-        let text = record.status;
+  title: "Trạng thái",
+  dataIndex: "status",
+  render: (_: any, record: Order) => {
+    const color = STATUS_COLORS[record.status] || "default";
+    const text = STATUS_LABELS[record.status] || record.status;
+    return <Tag color={color}>{text}</Tag>;
+  },
+  
+},
+{
+  title: "Hành động",
+  key: "actions",
+  render: (_: any, record: Order) => (
+    <Space>
+      <Button
+        size="small"
+         icon={<EyeOutlined />}
 
-        switch (record.status) {
-          case "pending":
-            color = "gold";
-            text = "Chờ xử lý";
-            break;
-          case "processing":
-            color = "blue";
-            text = "Đang giao";
-            break;
-          case "completed":
-            color = "green";
-            text = "Hoàn tất";
-            break;
-          case "cancelled":
-            color = "red";
-            text = "Đã huỷ";
-            break;
-        }
+        onClick={() => {
+          setSelectedOrder(record);
+          setIsViewModalVisible(true);
+        }}
+      >
+        
+        Xem
+      </Button>
+      <Button
+        size="small"
+        icon={<EditOutlined />}
+        onClick={() => handleEditClick(record)}
+        disabled={STATUS_FLOW[record.status]?.length === 0}
+      >
+        Sửa
+      </Button>
+    </Space>
+  ),
+},
 
-        return (
-          <Space>
-            <Tag color={color}>{text}</Tag>
-            <Button onClick={() => handleEditClick(record)} type="link">
-              Sửa
-            </Button>
-          </Space>
-        );
-      },
-    },
-    
+
   ];
 
   return (
@@ -224,6 +212,7 @@ const AdminOrderList: React.FC = () => {
         pagination={{ pageSize: 6 }}
       />
 
+      {/* Modal cập nhật */}
       <Modal
         title="Cập nhật đơn hàng"
         open={isModalVisible}
@@ -236,17 +225,104 @@ const AdminOrderList: React.FC = () => {
           <Form.Item
             name="status"
             label="Trạng thái"
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: "Vui lòng chọn trạng thái mới" }]}
           >
             <Select>
-              <Option value="pending">Chờ xử lý</Option>
-              <Option value="processing">Đang giao</Option>
-              <Option value="completed">Hoàn tất</Option>
-              <Option value="cancelled">Đã huỷ</Option>
+              {Object.keys(STATUS_LABELS).map((status) => (
+                <Option
+                  key={status}
+                  value={status}
+                  disabled={
+                    editingOrder &&
+                    !STATUS_FLOW[editingOrder.status]?.includes(status)
+                  }
+                >
+                  {STATUS_LABELS[status]}
+                </Option>
+              ))}
             </Select>
           </Form.Item>
-          
         </Form>
+      </Modal>
+
+      {/* Modal xem chi tiết */}
+      <Modal
+        title="Chi tiết đơn hàng"
+        open={isViewModalVisible}
+        onCancel={() => setIsViewModalVisible(false)}
+        footer={null}
+        width={800}
+      >
+        {selectedOrder && (
+          <Descriptions bordered column={1}>
+            <Descriptions.Item label="Mã đơn">
+              {selectedOrder._id}
+            </Descriptions.Item>
+            <Descriptions.Item label="Khách hàng">
+              {selectedOrder.userId?.full_name} - {selectedOrder.userId?.email}
+            </Descriptions.Item>
+            <Descriptions.Item label="Địa chỉ giao hàng">
+              {selectedOrder.shippingAddress}
+            </Descriptions.Item>
+            <Descriptions.Item label="Thanh toán">
+              {selectedOrder.paymentMethod}
+            </Descriptions.Item>
+            <Descriptions.Item label="Trạng thái">
+              <Tag color={STATUS_COLORS[selectedOrder.status]}>
+                {STATUS_LABELS[selectedOrder.status]}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="Ngày tạo">
+              {new Date(selectedOrder.createdAt).toLocaleString()}
+            </Descriptions.Item>
+            <Descriptions.Item label="Sản phẩm">
+              <Table
+                dataSource={selectedOrder.items}
+                rowKey="_id"
+                pagination={false}
+                size="small"
+                bordered
+              >
+                <Table.Column
+                  title="Ảnh"
+                  dataIndex="variantId"
+                  render={(variant: Variant | null) =>
+                    variant?.imageUrl?.[0] ? (
+                      <Image src={variant.imageUrl[0]} width={50} />
+                    ) : (
+                      <div style={{ width: 50, height: 50, background: "#eee" }}>
+                        No image
+                      </div>
+                    )
+                  }
+                />
+                <Table.Column
+                  title="Tên"
+                  dataIndex="variantId"
+                  render={(variant: Variant | null) => variant?.name}
+                />
+                <Table.Column
+                  title="Số lượng"
+                  dataIndex="quantity"
+                />
+                <Table.Column
+                  title="Đơn giá"
+                  dataIndex="price"
+                  render={(price: number) => `${price.toLocaleString()}₫`}
+                />
+                <Table.Column
+                  title="Thành tiền"
+                  render={(_, item: OrderItem) =>
+                    `${(item.price * item.quantity).toLocaleString()}₫`
+                  }
+                />
+              </Table>
+            </Descriptions.Item>
+            <Descriptions.Item label="Tổng tiền">
+              <Text strong>{selectedOrder.totalAmount.toLocaleString()}₫</Text>
+            </Descriptions.Item>
+          </Descriptions>
+        )}
       </Modal>
     </>
   );

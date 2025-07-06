@@ -94,7 +94,7 @@ const {
         <Table.Column title="Tên sản phẩm" dataIndex="title" />
         <Table.Column title="Seri" dataIndex="groupId" render={(group) => group?.name} />
         <Table.Column title="Dung Lượng" dataIndex="capacity" />
-
+        
         <Table.Column
           title="Ảnh"
           dataIndex="imageUrl"
