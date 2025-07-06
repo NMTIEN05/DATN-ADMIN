@@ -1,56 +1,45 @@
 import React, { useState } from "react";
-import { Upload, message, Form, Input, Button, Card } from "antd";
-import ImgCrop from "antd-img-crop";
-import { PlusOutlined } from "@ant-design/icons";
-import { uploadImageToCloudinary } from "../../utils/cloudinaryUpload";
+
+import { Form, Input, Button, Card, message, type UploadFile } from "antd";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import axios from "axios";
-import type { UploadFile } from "antd/es/upload/interface";
 import ImageUpload from "../../components/common/ImageUpload";
 
 const CreateCategory = () => {
   const [form] = Form.useForm();
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [fileList, setFileList] = useState<UploadFile[]>([]);
   const navigate = useNavigate();
 
-  const onFinish = async (values: any) => {
-    if (!imageFile) {
-      message.error("Vui lòng chọn ảnh!");
-      return;
-    }
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [imageUrl, setImageUrl] = useState<string[]>([]);
 
+  const onFinish = async (values: any) => {
     try {
-      const imageUrl = await uploadImageToCloudinary(imageFile);
-      const body = {
+      if (!imageUrl || imageUrl.length === 0 || imageUrl[0].startsWith("blob:")) {
+        message.error("Vui lòng tải ảnh danh mục hợp lệ!");
+        return;
+      }
+
+      const payload = {
         name: values.name,
-        description: values.description,
-        imageUrl,
+        description: values.description || "",
+        imageUrl: imageUrl[0], // chỉ dùng 1 ảnh
       };
 
-      await axios.post("http://localhost:8888/api/category", body);
-      toast.success("Thêm danh mục thành công!");
+      await axios.post(`${import.meta.env.VITE_PUBLIC_API_URL}api/category`, payload);
+      toast.success("Tạo danh mục thành công!");
       setTimeout(() => {
         navigate("/dashboard/category");
       }, 1500);
-    } catch (err: any) {
-     
+    } catch (err) {
+      console.error("❌ Lỗi tạo danh mục:", err);
       message.error("Tạo danh mục thất bại!");
-    }
-  };
-
-  const handleUploadChange = ({ fileList: newFileList }: { fileList: UploadFile[] }) => {
-    setFileList(newFileList);
-    const latestFile = newFileList[0];
-    if (latestFile?.originFileObj) {
-      setImageFile(latestFile.originFileObj as File);
     }
   };
 
   return (
     <div>
-      <h2 className="text-3xl font-bold text-indigo-600 mb-5">Thêm mới Danh Mục</h2>
+      <h2 className="text-3xl font-bold text-indigo-600 mb-5">Thêm danh mục</h2>
       <Card>
         <Form form={form} layout="vertical" onFinish={onFinish}>
           <Form.Item
@@ -69,13 +58,15 @@ const CreateCategory = () => {
             <Input.TextArea rows={4} />
           </Form.Item>
 
-          <Form.Item label="Ảnh đại diện">
+         <Form.Item label="Ảnh đại diện">
   <ImageUpload
     fileList={fileList}
     setFileList={setFileList}
-    setImageFile={setImageFile}
+    setImageUrl={setImageUrl}
+    maxCount={10}
   />
 </Form.Item>
+
 
           <Form.Item>
             <Button type="primary" htmlType="submit" block>

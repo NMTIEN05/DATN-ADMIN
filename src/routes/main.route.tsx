@@ -20,6 +20,8 @@ import Unauthorized from "../pages/Auth/Unauthorized";
 import ProtectedRoute from "../pages/Auth/ProtectedRoute";
 import AdminOrderList from "../pages/Order/ListOrder";
 import DeletedProductList from "../pages/Product/components/DeletedProductList";
+import DeletedCategoryList from "../pages/Category/DeletedCategoryList";
+import DeletedProductGroupList from "../pages/Capacity/DeletedProductGroupList";
 
  // import middleware này
 
@@ -57,7 +59,10 @@ export const router = createBrowserRouter([
             path: "category/edit/:id",
             element: <UpdateCategory />,
           },
-
+          {
+            path: "category/deleted",
+            element: <DeletedCategoryList />,
+          },
           // ProductGroup (Capacity)
           {
             path: "capacity",
@@ -70,6 +75,10 @@ export const router = createBrowserRouter([
           {
             path: "capacity/edit/:id",
             element: <EditProductGroup />,
+          },
+          {
+            path: "capacity/deleted",
+            element: <DeletedProductGroupList />,
           },
 
           // Product
