@@ -44,10 +44,14 @@ const ListUser = () => {
     setLoading(true);
     try {
       const res = await axios.get("http://localhost:8888/api/auth", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  },
+  params: {
+    limit: 1000, // hoặc số lớn tùy bạn muốn bao nhiêu user
+  },
+});
+
       setUsers(res.data.data);
     } catch (error) {
       console.error("Lỗi khi lấy danh sách user:", error);

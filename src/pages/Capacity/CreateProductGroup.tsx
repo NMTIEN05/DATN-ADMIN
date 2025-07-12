@@ -82,6 +82,7 @@ const CreateProductGroup = () => {
             setImageUrl={setImageUrl}
             maxCount={5}
           />
+       
 
           <Form.Item
             label="Danh mục"

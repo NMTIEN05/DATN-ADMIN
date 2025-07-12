@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-
 import { Form, Input, Button, Card, message, type UploadFile } from "antd";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -11,10 +10,11 @@ const CreateCategory = () => {
   const navigate = useNavigate();
 
   const [fileList, setFileList] = useState<UploadFile[]>([]);
-  const [imageUrl, setImageUrl] = useState<string[]>([]);
+  const [imageUrl, setImageUrl] = useState<string[]>([]); // mảng ảnh
 
   const onFinish = async (values: any) => {
     try {
+      // Kiểm tra ảnh hợp lệ (không để blob)
       if (!imageUrl || imageUrl.length === 0 || imageUrl[0].startsWith("blob:")) {
         message.error("Vui lòng tải ảnh danh mục hợp lệ!");
         return;
@@ -23,16 +23,19 @@ const CreateCategory = () => {
       const payload = {
         name: values.name,
         description: values.description || "",
-        imageUrl: imageUrl[0], // chỉ dùng 1 ảnh
+        imageUrl: imageUrl, // ✅ gửi dưới dạng mảng
       };
 
+      console.log("📤 Payload gửi đi:", payload);
+
       await axios.post(`${import.meta.env.VITE_PUBLIC_API_URL}api/category`, payload);
-      toast.success("Tạo danh mục thành công!");
+
+      toast.success("✅ Tạo danh mục thành công!");
       setTimeout(() => {
         navigate("/dashboard/category");
       }, 1500);
-    } catch (err) {
-      console.error("❌ Lỗi tạo danh mục:", err);
+    } catch (err: any) {
+      console.error("❌ Lỗi tạo danh mục:", err?.response?.data || err.message);
       message.error("Tạo danh mục thất bại!");
     }
   };
@@ -47,7 +50,7 @@ const CreateCategory = () => {
             name="name"
             rules={[{ required: true, message: "Vui lòng nhập tên!" }]}
           >
-            <Input />
+            <Input placeholder="Ví dụ: Phụ kiện Apple" />
           </Form.Item>
 
           <Form.Item
@@ -55,18 +58,17 @@ const CreateCategory = () => {
             name="description"
             rules={[{ required: true, message: "Vui lòng nhập mô tả!" }]}
           >
-            <Input.TextArea rows={4} />
+            <Input.TextArea rows={4} placeholder="Thông tin mô tả danh mục..." />
           </Form.Item>
 
-         <Form.Item label="Ảnh đại diện">
-  <ImageUpload
-    fileList={fileList}
-    setFileList={setFileList}
-    setImageUrl={setImageUrl}
-    maxCount={10}
-  />
-</Form.Item>
-
+          <Form.Item label="Ảnh đại diện">
+            <ImageUpload
+              fileList={fileList}
+              setFileList={setFileList}
+              setImageUrl={setImageUrl}
+              maxCount={1}
+            />
+          </Form.Item>
 
           <Form.Item>
             <Button type="primary" htmlType="submit" block>
