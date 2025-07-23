@@ -66,7 +66,7 @@ const CreateCategory = () => {
               fileList={fileList}
               setFileList={setFileList}
               setImageUrl={setImageUrl}
-              maxCount={1}
+              maxCount={10}
             />
           </Form.Item>
 

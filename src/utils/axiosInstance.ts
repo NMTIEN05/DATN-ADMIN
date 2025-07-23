@@ -1,35 +1,32 @@
 import axios from "axios";
 
-// Lấy token từ localStorage hoặc nơi lưu token của bạn
-const token = localStorage.getItem("token");
-
+// Tạo một instance của axios
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:8888/api", // đổi theo backend của bạn
-  timeout: 10000, // timeout 10s (tuỳ chọn)
+  baseURL: "http://localhost:8888/api", // Thay bằng API backend của bạn nếu cần
+  timeout: 10000,
 });
 
-// Thêm interceptor để tự động thêm Authorization header nếu có token
+// Interceptor để gắn token vào request header
 axiosInstance.interceptors.request.use(
   (config) => {
+    const token = localStorage.getItem("token"); // ✅ Lấy token mỗi lần gửi request
     if (token) {
-      config.headers = config.headers ?? {};
+      config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Bạn cũng có thể thêm interceptor response để xử lý lỗi chung
+// Interceptor để xử lý lỗi response
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Xử lý lỗi chung, ví dụ token hết hạn => redirect login
     if (error.response?.status === 401) {
-      // Xử lý logout hoặc redirect
+      // ✅ Token hết hạn hoặc không hợp lệ => logout + redirect
       localStorage.removeItem("token");
+      localStorage.removeItem("user");
       window.location.href = "/login";
     }
     return Promise.reject(error);

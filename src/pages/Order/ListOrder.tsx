@@ -71,13 +71,23 @@ interface User {
   email?: string;
 }
 
+interface ShippingInfo {
+  fullName: string;
+  phone: string;
+  address: string;
+  ward?: string;
+  district?: string;
+  province?: string;
+}
+
 interface Order {
   _id: string;
   userId: User;
   items: OrderItem[];
   totalAmount: number;
-  shippingAddress: string;
+  shippingInfo: ShippingInfo;
   paymentMethod: string;
+  paymentStatus: string;
   status: string;
   createdAt: string;
 }
@@ -94,7 +104,7 @@ const AdminOrderList: React.FC = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const res = await axiosInstance.get("/orders");
+      const res = await axiosInstance.get("/orders?limit=9999");
       if (Array.isArray(res.data.data)) {
         setOrders(res.data.data);
       }
@@ -158,45 +168,62 @@ const AdminOrderList: React.FC = () => {
       render: (method: string) => <Tag color="blue">{method}</Tag>,
     },
     {
-  title: "Trạng thái",
-  dataIndex: "status",
-  render: (_: any, record: Order) => {
-    const color = STATUS_COLORS[record.status] || "default";
-    const text = STATUS_LABELS[record.status] || record.status;
+      title: "Trạng thái",
+      dataIndex: "status",
+      render: (_: any, record: Order) => {
+        const color = STATUS_COLORS[record.status] || "default";
+        const text = STATUS_LABELS[record.status] || record.status;
+        return <Tag color={color}>{text}</Tag>;
+      },
+    },
+    {
+  title: "Thanh toán",
+  dataIndex: "paymentStatus",
+  render: (status: string) => {
+    let color = "default";
+    let text = "Không xác định";
+
+    if (status === "paid") {
+      color = "green";
+      text = "Đã thanh toán";
+    } else if (status === "unpaid") {
+      color = "red";
+      text = "Chưa thanh toán";
+    } else if (status === "failed") {
+      color = "orange";
+      text = "Thanh toán thất bại";
+    }
+
     return <Tag color={color}>{text}</Tag>;
   },
-  
-},
-{
-  title: "Hành động",
-  key: "actions",
-  render: (_: any, record: Order) => (
-    <Space>
-      <Button
-        size="small"
-         icon={<EyeOutlined />}
-
-        onClick={() => {
-          setSelectedOrder(record);
-          setIsViewModalVisible(true);
-        }}
-      >
-        
-        Xem
-      </Button>
-      <Button
-        size="small"
-        icon={<EditOutlined />}
-        onClick={() => handleEditClick(record)}
-        disabled={STATUS_FLOW[record.status]?.length === 0}
-      >
-        Sửa
-      </Button>
-    </Space>
-  ),
 },
 
-
+    {
+      title: "Hành động",
+      key: "actions",
+      render: (_: any, record: Order) => (
+        <Space>
+          <Button
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => {
+              setSelectedOrder(record);
+              setIsViewModalVisible(true);
+            }}
+          >
+            Xem
+          </Button>
+          <Button
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => handleEditClick(record)}
+            disabled={STATUS_FLOW[record.status]?.length === 0}
+          >
+            Sửa
+          </Button>
+        </Space>
+      ),
+    },
   ];
 
   return (
@@ -258,12 +285,17 @@ const AdminOrderList: React.FC = () => {
             <Descriptions.Item label="Mã đơn">
               {selectedOrder._id}
             </Descriptions.Item>
-            <Descriptions.Item label="Khách hàng">
-              {selectedOrder.userId?.full_name} - {selectedOrder.userId?.email}
-            </Descriptions.Item>
-            <Descriptions.Item label="Địa chỉ giao hàng">
-              {selectedOrder.shippingAddress}
-            </Descriptions.Item>
+      <Descriptions.Item label="Thông tin giao hàng">
+  <>
+    <div><strong>Họ tên:</strong> {selectedOrder.shippingInfo?.fullName}</div>
+    <div><strong>SĐT:</strong> {selectedOrder.shippingInfo?.phone}</div>
+    <div>
+      <strong>Địa chỉ:</strong> {selectedOrder.shippingInfo?.address}, {selectedOrder.shippingInfo?.ward},{" "}
+      {selectedOrder.shippingInfo?.district}, {selectedOrder.shippingInfo?.province}
+    </div>
+  </>
+</Descriptions.Item>
+
             <Descriptions.Item label="Thanh toán">
               {selectedOrder.paymentMethod}
             </Descriptions.Item>
@@ -301,10 +333,7 @@ const AdminOrderList: React.FC = () => {
                   dataIndex="variantId"
                   render={(variant: Variant | null) => variant?.name}
                 />
-                <Table.Column
-                  title="Số lượng"
-                  dataIndex="quantity"
-                />
+                <Table.Column title="Số lượng" dataIndex="quantity" />
                 <Table.Column
                   title="Đơn giá"
                   dataIndex="price"
