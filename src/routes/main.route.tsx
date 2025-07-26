@@ -4,23 +4,56 @@ import Content from "../components/layouts/MainLayout";
 
 import UserForm from "../pages/userList";
 import UserList from "../pages/userList";
+import BannerList from "../pages/banner/bannerList";
+import ErrorPage from "./ErrorPage"; // sửa đường dẫn
 
 export const router = createBrowserRouter([
   {
-    path: "/dashboard",
-    element: <Dashbroad />,   // Layout chính có <Outlet />
+    path: "/",
+    element: <Dashbroad />,
+    errorElement: <ErrorPage />,
     children: [
       {
-        path: "",             // Route con trống, để chứa children
-        element: <Content />, // Layout con có <Outlet />
+        path: "",
+        element: <Content />,
+        errorElement: <ErrorPage />,
         children: [
           {
-            path: "users/add",    // /dashboard/users
-            element: <UserList />, // Trang users
+            path: "users/add",
+            element: <UserList />,
+          },
+          {
+            path: "banners",
+            element: <BannerList />,
           },
         ],
       },
     ],
   },
+  {
+    path: "/dashboard",
+    element: <Dashbroad />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        path: "",
+        element: <Content />,
+        errorElement: <ErrorPage />,
+        children: [
+          {
+            path: "users/add",
+            element: <UserList />,
+          },
+          {
+            path: "banners",
+            element: <BannerList />,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    path: "*",
+    element: <ErrorPage />,
+  },
 ]);
-

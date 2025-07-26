@@ -5,6 +5,7 @@ import {
   UserOutlined,
   VideoCameraOutlined,
   UploadOutlined,
+  PictureOutlined,
 } from '@ant-design/icons';
 import React, { useState } from 'react';
 
@@ -21,12 +22,12 @@ const Dashbroad: React.FC = () => {
         <Menu
           theme="dark"
           mode="inline"
-          defaultSelectedKeys={['/dashboard/users']}
+          defaultSelectedKeys={['/']}
           onClick={({ key }) => navigate(key)}
           items={[
-            { key: '/dashboard/users', icon: <UserOutlined />, label: 'Người dùng' },
-            { key: '/dashboard/videos', icon: <VideoCameraOutlined />, label: 'Video' },
-            { key: '/dashboard/uploads', icon: <UploadOutlined />, label: 'Upload' },
+            { key: '/', icon: <UserOutlined />, label: 'Dashboard' },
+            { key: '/users/add', icon: <VideoCameraOutlined />, label: 'Thêm người dùng' },
+            { key: '/banners', icon: <PictureOutlined />, label: 'Quản lý Banner' },
           ]}
         />
       </Sider>

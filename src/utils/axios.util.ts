@@ -10,8 +10,8 @@ interface CustomAxiosRequestConfig extends AxiosRequestConfig {
   isAuthApi?: boolean;
 }
 
-const axiosInstance = axios.create({
-  baseURL: process.env.PUBLIC_API_URL,
+export const axiosInstance = axios.create({
+  baseURL: 'http://localhost:8888/api',
   timeout: 20000,
   headers: {
     "Content-Type": "application/json",
