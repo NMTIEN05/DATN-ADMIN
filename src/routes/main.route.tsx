@@ -22,6 +22,7 @@ import AdminOrderList from "../pages/Order/ListOrder";
 import DeletedProductList from "../pages/Product/components/DeletedProductList";
 import DeletedCategoryList from "../pages/Category/DeletedCategoryList";
 import DeletedProductGroupList from "../pages/Capacity/DeletedProductGroupList";
+import Dashboard from "../pages/Dash/PT";
 
  // import middleware này
 
@@ -51,6 +52,11 @@ export const router = createBrowserRouter([
             path: "category",
             element: <ListCategory />,
           },
+            {
+            path: "phantich",
+            element: <Dashboard />,
+          },
+
           {
             path: "category/create",
             element: <CreateCategory />,

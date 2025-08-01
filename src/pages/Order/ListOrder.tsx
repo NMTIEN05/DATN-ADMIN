@@ -24,7 +24,9 @@ const STATUS_FLOW: Record<string, string[]> = {
   ready_to_ship: ["shipped", "cancelled"],
   shipped: ["delivered", "return_requested"],
   delivered: ["return_requested"],
-  return_requested: ["returned", "cancelled"],
+  
+  return_requested: ["returned", "cancelled", "delivered", "rejected"],
+
   returned: [],
   cancelled: [],
 };
@@ -37,6 +39,8 @@ const STATUS_LABELS: Record<string, string> = {
   delivered: "Đã giao",
   return_requested: "Yêu cầu trả hàng",
   returned: "Đã hoàn trả",
+  rejected: "Từ chối hoàn trả",
+
   cancelled: "Đã huỷ",
 };
 
@@ -48,6 +52,7 @@ const STATUS_COLORS: Record<string, string> = {
   delivered: "green",
   return_requested: "orange",
   returned: "volcano",
+  rejected: "magenta",
   cancelled: "red",
 };
 
@@ -90,6 +95,12 @@ interface Order {
   paymentStatus: string;
   status: string;
   createdAt: string;
+   returnRequest?: {
+    status?: string;
+    reason?: string;
+    requestedAt?: string;
+  }; // ✅ sửa đúng ở đây
+
 }
 
 const AdminOrderList: React.FC = () => {
@@ -100,11 +111,15 @@ const AdminOrderList: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isViewModalVisible, setIsViewModalVisible] = useState(false);
   const [form] = Form.useForm();
+const rejectReason = Form.useWatch("rejectReason", form);
 
+
+const [selectedStatus, setSelectedStatus] = useState<string>();
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const res = await axiosInstance.get("/orders?limit=9999");
+      const res = await axiosInstance.get("/orders?limit=100");
+      console.log("🔎 First Order:", res.data.data?.[0]);
       if (Array.isArray(res.data.data)) {
         setOrders(res.data.data);
       }
@@ -123,21 +138,47 @@ const AdminOrderList: React.FC = () => {
   const handleEditClick = (order: Order) => {
     setEditingOrder(order);
     form.setFieldsValue({ status: order.status });
+    setSelectedStatus(order.status); // ✅ THÊM dòng này
     setIsModalVisible(true);
   };
 
-  const handleUpdateOrder = async () => {
-    try {
-      const values = await form.validateFields();
-      await axiosInstance.put(`/orders/${editingOrder?._id}/status`, values);
-      message.success("Cập nhật thành công");
-      fetchOrders();
-      setIsModalVisible(false);
-    } catch (err) {
-      console.error(err);
-      message.error("Cập nhật thất bại");
+const handleUpdateOrder = async () => {
+  try {
+    const values = await form.validateFields();
+    const payload: any = { status: values.status };
+
+    if (
+      editingOrder?.status === "return_requested" &&
+      ["delivered", "rejected"].includes(values.status)
+    ) {
+      if (!values.rejectReason || values.rejectReason.trim() === "") {
+        message.error("Vui lòng chọn lý do từ chối hoàn trả");
+        return;
+      }
+
+      // ✅ Sửa ở đây: Nếu chọn "Lý do khác" → lấy giá trị cụ thể từ customRejectReason
+      if (values.rejectReason === "Lý do khác") {
+        if (!values.customRejectReason || values.customRejectReason.trim() === "") {
+          message.error("Vui lòng nhập lý do cụ thể");
+          return;
+        }
+        payload.rejectReason = values.customRejectReason;
+      } else {
+        payload.rejectReason = values.rejectReason;
+      }
     }
-  };
+
+    await axiosInstance.put(`/orders/${editingOrder?._id}/status`, payload);
+    message.success("Cập nhật thành công");
+    fetchOrders();
+    setIsModalVisible(false);
+  } catch (err: any) {
+    console.error("❌ Update lỗi:", err.response?.data);
+    message.error("Cập nhật thất bại");
+  }
+};
+
+
 
   const columns = [
     {
@@ -241,36 +282,79 @@ const AdminOrderList: React.FC = () => {
 
       {/* Modal cập nhật */}
       <Modal
-        title="Cập nhật đơn hàng"
-        open={isModalVisible}
-        onOk={handleUpdateOrder}
-        onCancel={() => setIsModalVisible(false)}
-        okText="Lưu"
-        cancelText="Huỷ"
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            name="status"
-            label="Trạng thái"
-            rules={[{ required: true, message: "Vui lòng chọn trạng thái mới" }]}
+  title="Cập nhật đơn hàng"
+  open={isModalVisible}
+  onOk={handleUpdateOrder}
+  onCancel={() => setIsModalVisible(false)}
+  okText="Lưu"
+  cancelText="Huỷ"
+>
+  <Form form={form} layout="vertical">
+    <Form.Item
+      name="status"
+      label="Trạng thái"
+      rules={[{ required: true, message: "Vui lòng chọn trạng thái mới" }]}
+    >
+     <Select
+  onChange={(value) => {
+    setSelectedStatus(value); // ✅ cập nhật trạng thái chọn
+    if (value !== "delivered" && value !== "rejected") {
+      form.setFieldsValue({ rejectReason: undefined });
+    }
+  }}
+>
+
+        {Object.keys(STATUS_LABELS).map((status) => (
+          <Option
+            key={status}
+            value={status}
+            disabled={
+              editingOrder &&
+              !STATUS_FLOW[editingOrder.status]?.includes(status)
+            }
           >
-            <Select>
-              {Object.keys(STATUS_LABELS).map((status) => (
-                <Option
-                  key={status}
-                  value={status}
-                  disabled={
-                    editingOrder &&
-                    !STATUS_FLOW[editingOrder.status]?.includes(status)
-                  }
-                >
-                  {STATUS_LABELS[status]}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-        </Form>
-      </Modal>
+            {STATUS_LABELS[status]}
+          </Option>
+        ))}
+      </Select>
+    </Form.Item>
+
+    {/* Hiện lý do từ chối nếu đang từ "return_requested" -> "delivered" */}
+  {editingOrder?.status === "return_requested" &&
+  ["delivered", "rejected"].includes(selectedStatus || "") && (
+    <>
+      <Form.Item
+        name="rejectReason"
+        label="Lý do từ chối hoàn trả"
+        rules={[{ required: true, message: "Vui lòng chọn lý do từ chối" }]}
+      >
+        <Select placeholder="Chọn lý do từ chối">
+          <Option value="Không đủ điều kiện trả hàng">Không đủ điều kiện trả hàng</Option>
+          <Option value="Sản phẩm không lỗi">Sản phẩm không lỗi</Option>
+          <Option value="Lý do khác">Lý do khác</Option>
+        </Select>
+      </Form.Item>
+
+      {rejectReason === "Lý do khác" && (
+        <Form.Item
+          name="customRejectReason"
+          label="Nhập lý do cụ thể"
+          rules={[{ required: true, message: "Vui lòng nhập lý do cụ thể" }]}
+        >
+          <textarea
+            className="w-full p-2 border rounded"
+            rows={3}
+            placeholder="Nhập lý do từ chối hoàn trả..."
+          />
+        </Form.Item>
+      )}
+    </>
+)}
+
+
+  </Form>
+</Modal>
+
 
       {/* Modal xem chi tiết */}
       <Modal
@@ -299,11 +383,30 @@ const AdminOrderList: React.FC = () => {
             <Descriptions.Item label="Thanh toán">
               {selectedOrder.paymentMethod}
             </Descriptions.Item>
-            <Descriptions.Item label="Trạng thái">
-              <Tag color={STATUS_COLORS[selectedOrder.status]}>
-                {STATUS_LABELS[selectedOrder.status]}
-              </Tag>
-            </Descriptions.Item>
+           <Descriptions.Item label="Trạng thái">
+  <Tag color={STATUS_COLORS[selectedOrder.status]}>
+    {STATUS_LABELS[selectedOrder.status]}
+  </Tag>
+</Descriptions.Item>
+
+
+{selectedOrder.status === "return_requested" &&
+  selectedOrder.returnRequest?.reason && (
+    <Descriptions.Item label="Lý do trả hàng">
+      {selectedOrder.returnRequest.reason}
+    </Descriptions.Item>
+)}
+{selectedOrder?.returnRequest?.status === "rejected" &&
+  selectedOrder.returnRequest?.reason && (
+    <Descriptions.Item label="Lý do từ chối hoàn trả">
+      {selectedOrder.returnRequest.reason}
+    </Descriptions.Item>
+)}
+
+
+
+
+
             <Descriptions.Item label="Ngày tạo">
               {new Date(selectedOrder.createdAt).toLocaleString()}
             </Descriptions.Item>

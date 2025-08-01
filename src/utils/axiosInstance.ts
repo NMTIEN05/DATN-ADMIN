@@ -3,7 +3,7 @@ import axios from "axios";
 // Tạo một instance của axios
 const axiosInstance = axios.create({
   baseURL: "http://localhost:8888/api", // Thay bằng API backend của bạn nếu cần
-  timeout: 10000,
+  timeout: 100000,
 });
 
 // Interceptor để gắn token vào request header

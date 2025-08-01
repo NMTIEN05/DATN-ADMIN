@@ -28,7 +28,7 @@ const DashLayout: React.FC = () => {
 
   const menuItems = [
     {
-      key: '/dashboard',
+      key: '/dashboard/phantich',
       icon: <AreaChartOutlined />,
       label: 'Phân Tích',
     },
