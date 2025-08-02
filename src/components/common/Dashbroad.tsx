@@ -12,6 +12,7 @@ import {
   AppstoreOutlined,
   BgColorsOutlined,
   MenuUnfoldOutlined,
+  PictureOutlined,
 } from '@ant-design/icons';
 
 const { Sider, Content } = Layout;
@@ -64,6 +65,11 @@ const DashLayout: React.FC = () => {
       key: '/dashboard/orders',
       icon: <ShoppingOutlined />,
       label: 'Đơn Hàng',
+    },
+    {
+      key: '/dashboard/banners',
+      icon: <PictureOutlined />,
+      label: 'Banner',
     },
     {
       key: '/dashboard/posts',

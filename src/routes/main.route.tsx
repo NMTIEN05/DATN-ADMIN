@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import Dashbroad from "../components/common/Dashbroad";
 import Content from "../components/layouts/MainLayout";
 
@@ -23,10 +23,15 @@ import DeletedProductList from "../pages/Product/components/DeletedProductList";
 import DeletedCategoryList from "../pages/Category/DeletedCategoryList";
 import DeletedProductGroupList from "../pages/Capacity/DeletedProductGroupList";
 import Dashboard from "../pages/Dash/PT";
+import BannerList from "../pages/banner/bannerList";
 
  // import middleware này
 
 export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Navigate to="/dashboard" replace />,
+  },
   {
     path: "/login",
     element: <Login />,
@@ -47,6 +52,10 @@ export const router = createBrowserRouter([
         path: "",
         element: <Content />,
         children: [
+          {
+            path: "",
+            element: <Navigate to="phantich" replace />,
+          },
           // Category
           {
             path: "category",
@@ -114,6 +123,11 @@ export const router = createBrowserRouter([
           {
             path:"orders",
             element:<AdminOrderList />
+          },
+          // Banner
+          {
+            path: "banners",
+            element: <BannerList />,
           }
         ],
       },
