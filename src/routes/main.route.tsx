@@ -24,6 +24,7 @@ import DeletedCategoryList from "../pages/Category/DeletedCategoryList";
 import DeletedProductGroupList from "../pages/Capacity/DeletedProductGroupList";
 import Dashboard from "../pages/Dash/PT";
 import BannerList from "../pages/banner/bannerList";
+import CreateUser from "../pages/User/CreateUser";
 
  // import middleware này
 
@@ -120,6 +121,11 @@ export const router = createBrowserRouter([
             path: "users",
             element: <ListUser />,
           },
+          {
+  path: "users/create",
+  element: <CreateUser />,
+},
+
           {
             path:"orders",
             element:<AdminOrderList />
