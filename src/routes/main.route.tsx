@@ -22,6 +22,7 @@ import AdminOrderList from "../pages/Order/ListOrder";
 import DeletedProductList from "../pages/Product/components/DeletedProductList";
 import DeletedCategoryList from "../pages/Category/DeletedCategoryList";
 import DeletedProductGroupList from "../pages/Capacity/DeletedProductGroupList";
+import CreateUser from "../pages/User/CreateUser";
 
  // import middleware này
 
@@ -105,6 +106,11 @@ export const router = createBrowserRouter([
             path: "users",
             element: <ListUser />,
           },
+          {
+  path: "users/create",
+  element: <CreateUser />,
+},
+
           {
             path:"orders",
             element:<AdminOrderList />

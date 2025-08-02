@@ -14,6 +14,7 @@ import {
 } from "antd";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom"; // IMPORT
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -37,6 +38,7 @@ const ListUser = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
 
+  const navigate = useNavigate(); // KHỞI TẠO
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
   const isAdmin = currentUser.role === "admin";
 
@@ -44,13 +46,13 @@ const ListUser = () => {
     setLoading(true);
     try {
       const res = await axios.get("http://localhost:8888/api/auth", {
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
-  },
-  params: {
-    limit: 1000, // hoặc số lớn tùy bạn muốn bao nhiêu user
-  },
-});
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        params: {
+          limit: 1000,
+        },
+      });
 
       setUsers(res.data.data);
     } catch (error) {
@@ -79,7 +81,6 @@ const ListUser = () => {
   const handleUpdateUser = async () => {
     try {
       const values = await form.validateFields();
-      console.log("Đang cập nhật user với ID:", editingUser?._id);
       await axios.put(
         `http://localhost:8888/api/auth/${editingUser?._id}`,
         values,
@@ -100,6 +101,7 @@ const ListUser = () => {
 
   useEffect(() => {
     fetchUsers();
+    // eslint-disable-next-line
   }, []);
 
   const columns = [
@@ -129,15 +131,15 @@ const ListUser = () => {
       key: "phone",
     },
     {
-  title: "Xác thực Email",
-  dataIndex: "isVerified",
-  key: "isVerified",
-  render: (verified: boolean) => (
-    <Tag color={verified ? "green" : "red"}>
-      {verified ? "Đã xác thực" : "Chưa xác thực"}
-    </Tag>
-  ),
-},
+      title: "Xác thực Email",
+      dataIndex: "isVerified",
+      key: "isVerified",
+      render: (verified: boolean) => (
+        <Tag color={verified ? "green" : "red"}>
+          {verified ? "Đã xác thực" : "Chưa xác thực"}
+        </Tag>
+      ),
+    },
     {
       title: "Phân quyền",
       dataIndex: "role",
@@ -148,7 +150,10 @@ const ListUser = () => {
         else if (role === "staff") color = "orange";
         else if (role === "user") color = "green";
         return (
-          <Tag color={color} style={{ fontWeight: "bold", textTransform: "uppercase" }}>
+          <Tag
+            color={color}
+            style={{ fontWeight: "bold", textTransform: "uppercase" }}
+          >
             {role}
           </Tag>
         );
@@ -205,6 +210,14 @@ const ListUser = () => {
       <h2 className="text-3xl font-bold text-indigo-600 mb-5">
         Danh sách người dùng
       </h2>
+      {/* NÚT TẠO NGƯỜI DÙNG */}
+      <Button
+        type="primary"
+        onClick={() => navigate("/dashboard/users/create")}
+        style={{ marginBottom: 16 }}
+      >
+        + Tạo người dùng
+      </Button>
       <Table
         columns={columns}
         dataSource={users}
@@ -222,7 +235,11 @@ const ListUser = () => {
         cancelText="Hủy"
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="role" label="Phân quyền" rules={[{ required: true }]}>
+          <Form.Item
+            name="role"
+            label="Phân quyền"
+            rules={[{ required: true }]}
+          >
             <Select>
               <Option value="admin">Admin</Option>
               <Option value="staff">Staff</Option>
