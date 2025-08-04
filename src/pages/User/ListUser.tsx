@@ -14,7 +14,7 @@ import {
 } from "antd";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom"; // IMPORT
+import { useNavigate } from "react-router-dom";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -31,14 +31,14 @@ interface User {
   isActive: boolean;
 }
 
-const ListUser = () => {
+const ListUser: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
 
-  const navigate = useNavigate(); // KHỞI TẠO
+  const navigate = useNavigate();
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
   const isAdmin = currentUser.role === "admin";
 
@@ -49,14 +49,10 @@ const ListUser = () => {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        params: {
-          limit: 1000,
-        },
+        params: { limit: 1000 },
       });
-
       setUsers(res.data.data);
     } catch (error) {
-      console.error("Lỗi khi lấy danh sách user:", error);
       message.error("Lỗi khi lấy danh sách người dùng");
     } finally {
       setLoading(false);
@@ -73,7 +69,6 @@ const ListUser = () => {
       toast.success("Xoá người dùng thành công");
       fetchUsers();
     } catch (error) {
-      console.error("Lỗi khi xoá:", error);
       message.error("Xoá người dùng thất bại");
     }
   };
@@ -94,7 +89,6 @@ const ListUser = () => {
       setIsModalVisible(false);
       fetchUsers();
     } catch (error) {
-      console.error("Lỗi cập nhật:", error);
       toast.error("Cập nhật thất bại");
     }
   };
@@ -150,10 +144,7 @@ const ListUser = () => {
         else if (role === "staff") color = "orange";
         else if (role === "user") color = "green";
         return (
-          <Tag
-            color={color}
-            style={{ fontWeight: "bold", textTransform: "uppercase" }}
-          >
+          <Tag color={color} style={{ fontWeight: "bold", textTransform: "uppercase" }}>
             {role}
           </Tag>
         );
@@ -173,35 +164,41 @@ const ListUser = () => {
       title: "Thao tác",
       key: "action",
       render: (_: any, record: User) =>
-        isAdmin ? (
-          <Space size="middle">
-            <Button
-              type="link"
-              onClick={() => {
-                setEditingUser(record);
-                form.setFieldsValue({
-                  role: record.role,
-                  isActive: record.isActive,
-                });
-                setIsModalVisible(true);
-              }}
-            >
-              Sửa
-            </Button>
-            <Popconfirm
-              title="Bạn có chắc chắn muốn xoá người dùng này không?"
-              okText="Xoá"
-              cancelText="Hủy"
-              onConfirm={() => handleDeleteUser(record._id)}
-            >
-              <Button type="link" danger>
-                Xoá
+        <Space size="middle">
+          <Button
+            type="link"
+            onClick={() => navigate(`/dashboard/users/${record._id}`)}
+          >
+            Chi tiết
+          </Button>
+          {isAdmin && (
+            <>
+              <Button
+                type="link"
+                onClick={() => {
+                  setEditingUser(record);
+                  form.setFieldsValue({
+                    role: record.role,
+                    isActive: record.isActive,
+                  });
+                  setIsModalVisible(true);
+                }}
+              >
+                Sửa
               </Button>
-            </Popconfirm>
-          </Space>
-        ) : (
-          <i>Không có quyền</i>
-        ),
+              <Popconfirm
+                title="Bạn có chắc chắn muốn xoá người dùng này không?"
+                okText="Xoá"
+                cancelText="Hủy"
+                onConfirm={() => handleDeleteUser(record._id)}
+              >
+                <Button type="link" danger>
+                  Xoá
+                </Button>
+              </Popconfirm>
+            </>
+          )}
+        </Space>
     },
   ];
 
@@ -210,7 +207,6 @@ const ListUser = () => {
       <h2 className="text-3xl font-bold text-indigo-600 mb-5">
         Danh sách người dùng
       </h2>
-      {/* NÚT TẠO NGƯỜI DÙNG */}
       <Button
         type="primary"
         onClick={() => navigate("/dashboard/users/create")}
