@@ -66,6 +66,11 @@ const DashLayout: React.FC = () => {
       icon: <ShoppingOutlined />,
       label: 'Đơn Hàng',
     },
+     {
+      key: '/dashboard/vouchers',
+      icon: <ShoppingOutlined />,
+      label: 'Mã Giamr Gía',
+    },
     {
       key: '/dashboard/banners',
       icon: <PictureOutlined />,

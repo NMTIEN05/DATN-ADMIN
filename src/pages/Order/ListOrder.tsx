@@ -95,6 +95,7 @@ interface Order {
   paymentStatus: string;
   status: string;
   createdAt: string;
+  discount:string;
    returnRequest?: {
     status?: string;
     reason?: string;
@@ -410,46 +411,80 @@ const handleUpdateOrder = async () => {
             <Descriptions.Item label="Ngày tạo">
               {new Date(selectedOrder.createdAt).toLocaleString()}
             </Descriptions.Item>
-            <Descriptions.Item label="Sản phẩm">
-              <Table
-                dataSource={selectedOrder.items}
-                rowKey="_id"
-                pagination={false}
-                size="small"
-                bordered
-              >
-                <Table.Column
-                  title="Ảnh"
-                  dataIndex="variantId"
-                  render={(variant: Variant | null) =>
-                    variant?.imageUrl?.[0] ? (
-                      <Image src={variant.imageUrl[0]} width={50} />
-                    ) : (
-                      <div style={{ width: 50, height: 50, background: "#eee" }}>
-                        No image
-                      </div>
-                    )
-                  }
-                />
-                <Table.Column
-                  title="Tên"
-                  dataIndex="variantId"
-                  render={(variant: Variant | null) => variant?.name}
-                />
-                <Table.Column title="Số lượng" dataIndex="quantity" />
-                <Table.Column
-                  title="Đơn giá"
-                  dataIndex="price"
-                  render={(price: number) => `${price.toLocaleString()}₫`}
-                />
-                <Table.Column
-                  title="Thành tiền"
-                  render={(_, item: OrderItem) =>
-                    `${(item.price * item.quantity).toLocaleString()}₫`
-                  }
-                />
-              </Table>
-            </Descriptions.Item>
+<Descriptions.Item label="Sản phẩm">
+  <>
+    <Table
+      dataSource={selectedOrder.items}
+      rowKey="_id"
+      pagination={false}
+      size="small"
+      bordered
+    >
+      <Table.Column
+        title="Ảnh"
+        dataIndex="variantId"
+        render={(variant: Variant | null) =>
+          variant?.imageUrl?.[0] ? (
+            <Image src={variant.imageUrl[0]} width={50} />
+          ) : (
+            <div style={{ width: 50, height: 50, background: "#eee" }}>
+              No image
+            </div>
+          )
+        }
+      />
+      <Table.Column
+        title="Tên"
+        dataIndex="variantId"
+        render={(variant: Variant | null) => variant?.name}
+      />
+      <Table.Column title="Số lượng" dataIndex="quantity" />
+      <Table.Column
+        title="Đơn giá"
+        dataIndex="price"
+        render={(price: number) => `${price.toLocaleString()}₫`}
+      />
+      <Table.Column
+        title="Thành tiền"
+        render={(_, item: OrderItem) =>
+          `${(item.price * item.quantity).toLocaleString()}₫`
+        }
+      />
+    </Table>
+
+    {/* Chi tiết thanh toán dưới bảng */}
+    <div style={{ marginTop: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <span><strong>Tạm tính:</strong></span>
+        <span>
+          {selectedOrder.items
+            ?.reduce((sum, item) => sum + item.price * item.quantity, 0)
+            .toLocaleString()}
+          ₫
+        </span>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", color: "red" }}>
+        <span><strong>Giảm giá:</strong></span>
+        <span>-{selectedOrder.discount?.toLocaleString() ?? 0}₫</span>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <span><strong>Thành tiền (đã giảm):</strong></span>
+        <span>{selectedOrder.totalAmount.toLocaleString()}₫</span>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <span><strong>Tổng tiền:</strong></span>
+        <span>{selectedOrder.totalAmount.toLocaleString()}₫</span>
+      </div>
+    </div>
+  </>
+</Descriptions.Item>
+
+
+
+
+
+
+
             <Descriptions.Item label="Tổng tiền">
               <Text strong>{selectedOrder.totalAmount.toLocaleString()}₫</Text>
             </Descriptions.Item>

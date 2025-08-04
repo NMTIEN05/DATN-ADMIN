@@ -70,7 +70,7 @@ console.log("Is dataSource?.data an array?", Array.isArray(dataSource?.data));
         <Button type="primary" onClick={() => navigate('/dashboard/capacity/create')}>
           + Thêm mới
         </Button>
-        <Button onClick={() => navigate("/dashboard/category/deleted")}>
+        <Button onClick={() => navigate("/dashboard/capacity/deleted")}>
                     Xem sản phẩm đã xoá
                   </Button>
       </div>

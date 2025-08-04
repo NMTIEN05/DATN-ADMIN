@@ -26,16 +26,29 @@ const ListCategory = () => {
   const { data: dataSource, isLoading } = useQuery({
     queryKey: ['category'],
     queryFn: async () => {
-      const { data } = await axios.get('http://localhost:8888/api/category');
+      const { data } = await axios.get('http://localhost:8888/api/category', {
+  params: {
+    limit: 1000,
+    offset: 0,
+    sortBy: 'createdAt',
+    order: 'desc',
+    
+  }
+});
       return data.data;
     },
   });
 
   const { mutate } = useMutation({
     mutationFn: async (id: string) => {
-      await axios.delete(`http://localhost:8888/api/category/${id}`);
+      try {
+        await axios.delete(`http://localhost:8888/api/category/${id}`);
       toast.success('Xoá danh mục thành công!');
       queryClient.invalidateQueries({ queryKey: ['category'] });
+      } catch (err:any) {
+          console.error('Xoá thất bại:', err.response?.data || err.message);
+      }
+      
     },
   });
 
@@ -105,20 +118,25 @@ const ListCategory = () => {
   }}
 />
 
-        <Column
-          title="Chức năng"
-          key="actions"
-          render={(_, record: any) => (
-            <Space>
-              <Button
-                type="primary"
-                onClick={() =>
-                  nav(`/dashboard/category/edit/${record._id}`)
-                }
-              >
-                Sửa
-              </Button>
-              <Popconfirm
+       <Column
+  title="Chức năng"
+  key="actions"
+  render={(_, record: any) => {
+    const isDefault = record.name === "Điện thoại";
+
+    return (
+      <Space>
+        {!isDefault && (
+          <>
+            <Button
+              type="primary"
+              onClick={() =>
+                nav(`/dashboard/category/edit/${record._id}`)
+              }
+            >
+              Sửa
+            </Button>
+            <Popconfirm
               title="Bạn có chắc muốn xoá không?"
               onConfirm={() => handleDelete(record._id)}
               okText="Xoá"
@@ -129,9 +147,13 @@ const ListCategory = () => {
                 Xoá
               </Button>
             </Popconfirm>
-            </Space>
-          )}
-        />
+          </>
+        )}
+      </Space>
+    );
+  }}
+/>
+
       </Table>
     </div>
   );
