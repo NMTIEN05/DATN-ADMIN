@@ -26,6 +26,11 @@ import Dashboard from "../pages/Dash/PT";
 import BannerList from "../pages/banner/bannerList";
 import CreateUser from "../pages/User/CreateUser";
 
+
+import FlashSaleList from "../pages/Flashsale/FlashSaleList";
+import CreateFlashSale from "../pages/Flashsale/CreateFlashSale";
+import EditFlashSale from "../pages/Flashsale/EditFlashSale";
+
  // import middleware này
 
 export const router = createBrowserRouter([
@@ -113,7 +118,20 @@ export const router = createBrowserRouter([
           {
   path: "product/deleted",
   element: <DeletedProductList />,
-},
+        },
+        // FlashSale
+        {
+          path: "flashsale",
+          element: <FlashSaleList />,
+        },
+        {
+          path: "flashsale/create",
+          element: <CreateFlashSale />,
+        },
+        {
+          path: "flashsale/edit/:id",
+          element: <EditFlashSale />,
+        },
 
 
           // User
