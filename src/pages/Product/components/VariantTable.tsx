@@ -399,7 +399,7 @@ const handleAddSubmit = async (values: any) => {
                 fileList={editingFileList}
                 setFileList={setEditingFileList}
                 setImageUrl={setEditingImageUrl}
-                maxCount={5}
+                maxCount={500}
               />
             </Form.Item>
           </Form>

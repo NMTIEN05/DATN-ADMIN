@@ -50,36 +50,39 @@ const CreateProduct = () => {
   };
 
   const onFinish = async (values: any) => {
-    try {
-      if (!imageUrl || imageUrl.length === 0 || imageUrl[0].startsWith("blob:")) {
-        message.error("Vui lòng tải ít nhất 1 ảnh sản phẩm hợp lệ!");
+    console.log("🖼️ imageUrl hiện tại:", imageUrl);
+
+    if (!imageUrl || imageUrl.length === 0 || imageUrl[0].startsWith("blob:")) {
+      message.error("❌ Vui lòng tải ít nhất 1 ảnh sản phẩm hợp lệ!");
+      return;
+    }
+
+    // 💡 Check thêm các trường bắt buộc
+    const requiredFields = ["title", "slug", "capacity", "priceDefault", "groupId", "categoryId"];
+    for (const field of requiredFields) {
+      if (!values[field]) {
+        message.error(`Trường "${field}" là bắt buộc`);
         return;
       }
+    }
 
-      // 💡 Check thêm các trường bắt buộc
-      const requiredFields = ["title", "slug", "capacity", "priceDefault", "groupId", "categoryId"];
-      for (const field of requiredFields) {
-        if (!values[field]) {
-          message.error(`Trường "${field}" là bắt buộc`);
-          return;
-        }
-      }
+    const payload = {
+      title: values.title,
+      slug: values.slug,
+      capacity: values.capacity,
+      description: values.description || "",
+      shortDescription: values.shortDescription || "",
+      imageUrl,
+      priceDefault: values.priceDefault,
+      categoryId: values.categoryId,
+      groupId: values.groupId,
+    };
 
-      const payload = {
-        title: values.title,
-        slug: values.slug,
-        capacity: values.capacity,
-        description: values.description || "",
-        shortDescription: values.shortDescription || "",
-        imageUrl,
-        priceDefault: values.priceDefault,
-        categoryId: values.categoryId,
-        groupId: values.groupId,
-      };
-
+    try {
+      console.log("📦 Payload gửi lên:", payload);
       await axios.post(`${import.meta.env.VITE_PUBLIC_API_URL}api/product`, payload);
 
-      toast.success("Tạo sản phẩm thành công!");
+      toast.success("✅ Tạo sản phẩm thành công!");
       setTimeout(() => navigate("/dashboard/product"), 1500);
     } catch (err: any) {
       console.error("❌ Lỗi tạo sản phẩm:", err.response?.data || err.message);
@@ -103,7 +106,10 @@ const CreateProduct = () => {
           <ImageUpload
             fileList={fileList}
             setFileList={setFileList}
-            setImageUrl={setImageUrl}
+            setImageUrl={(urls) => {
+              console.log("✅ Đã set ảnh từ ImageUpload:", urls);
+              setImageUrl(urls);
+            }}
             maxCount={5}
           />
 

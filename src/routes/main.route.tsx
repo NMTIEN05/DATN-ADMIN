@@ -24,6 +24,9 @@ import DeletedCategoryList from "../pages/Category/DeletedCategoryList";
 import DeletedProductGroupList from "../pages/Capacity/DeletedProductGroupList";
 import Dashboard from "../pages/Dash/PT";
 import BannerList from "../pages/banner/bannerList";
+import ListCoupon from "../pages/voucher/ListVoucher";
+import CreateCoupon from "../pages/voucher/AddVoucher";
+import EditCoupon from "../pages/voucher/EditVoucher";
 
  // import middleware này
 
@@ -128,7 +131,20 @@ export const router = createBrowserRouter([
           {
             path: "banners",
             element: <BannerList />,
-          }
+          },
+          {
+            path :"vouchers",
+            element :<ListCoupon/>
+          },
+           {
+            path :"vouchers/add",
+            element :<CreateCoupon/>
+          },
+           {
+            path :"vouchers/:id",
+            element :<EditCoupon/>
+          },
+
         ],
       },
     ],

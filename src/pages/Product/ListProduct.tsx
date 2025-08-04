@@ -32,7 +32,11 @@ const {
 } = useQuery({
   queryKey: ["products"],
   queryFn: async () => {
-    const { data } = await axios.get("http://localhost:8888/api/product");
+    const { data } = await axios.get("http://localhost:8888/api/product", {
+  params: {
+    limit: 1000, // 👈 giới hạn số lượng sản phẩm
+  },
+});
     return data.data;
   },
 });
