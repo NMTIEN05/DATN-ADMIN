@@ -16,14 +16,14 @@ const ListFlashSale = () => {
   const { data: flashSales, isLoading } = useQuery({
     queryKey: ['flashsales'],
     queryFn: async () => {
-      const { data } = await axios.get(`${import.meta.env.VITE_PUBLIC_API_URL}api/flashsales`);
+      const { data } = await axios.get(`${import.meta.env.VITE_PUBLIC_API_URL}api/flashsale`);
       return data;
     },
   });
 
   const { mutate: deleteFlashSale } = useMutation({
     mutationFn: async (id: string) => {
-      await axios.delete(`${import.meta.env.VITE_PUBLIC_API_URL}api/flashsales/${id}`);
+      await axios.delete(`${import.meta.env.VITE_PUBLIC_API_URL}api/flashsale/${id}`);
       toast.success('✅ Xoá Flash Sale thành công!');
       queryClient.invalidateQueries({ queryKey: ['flashsales'] });
     },
@@ -51,7 +51,7 @@ const ListFlashSale = () => {
         </Button>
       </div>
 
-      <Table dataSource={flashSales} rowKey="_id" loading={isLoading} pagination={{ pageSize: 5 }}>
+      <Table dataSource={flashSales?.data || []} rowKey="_id" loading={isLoading} pagination={{ pageSize: 5 }}>
         <Column title="STT" render={(_, __, index) => index + 1} />
         <Column title="Tên" dataIndex="title" />
         <Column
