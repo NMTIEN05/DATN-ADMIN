@@ -77,6 +77,11 @@ const DashLayout: React.FC = () => {
       label: 'Banner',
     },
     {
+      key: '/dashboard/flashsale',
+      icon: <BgColorsOutlined />,
+      label: 'Flash Sale',
+    },
+    {
       key: '/dashboard/posts',
       icon: <EditOutlined />,
       label: 'Bài Viết',
