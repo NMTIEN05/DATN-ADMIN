@@ -22,14 +22,17 @@ const STATUS_FLOW: Record<string, string[]> = {
   pending: ["processing", "cancelled"],
   processing: ["ready_to_ship", "cancelled"],
   ready_to_ship: ["shipped", "cancelled"],
-  shipped: ["delivered", "return_requested"],
-  delivered: ["return_requested"],
-  
-  return_requested: ["returned", "cancelled", "delivered", "rejected"],
+  shipped: ["delivered", "return_requested", "delivery_failed"],
+  delivered: ["received", "return_requested"],
+  received: ["return_requested"],
 
+  return_requested: ["returned", "cancelled", "delivered", "rejected"],
   returned: [],
+  delivery_failed: [],
+  rejected: [],
   cancelled: [],
 };
+
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Chờ xác nhận",
@@ -37,12 +40,15 @@ const STATUS_LABELS: Record<string, string> = {
   ready_to_ship: "Chờ giao hàng",
   shipped: "Đang giao",
   delivered: "Đã giao",
+  received: "Đã nhận hàng",
+  delivery_failed: "Giao hàng thất bại",
+
   return_requested: "Yêu cầu trả hàng",
   returned: "Đã hoàn trả",
   rejected: "Từ chối hoàn trả",
-
   cancelled: "Đã huỷ",
 };
+
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "gold",
@@ -50,11 +56,15 @@ const STATUS_COLORS: Record<string, string> = {
   ready_to_ship: "cyan",
   shipped: "purple",
   delivered: "green",
+  received: "lime",
+  delivery_failed: "volcano",
+
   return_requested: "orange",
   returned: "volcano",
   rejected: "magenta",
   cancelled: "red",
 };
+
 
 interface Variant {
   _id: string;
@@ -256,13 +266,15 @@ const handleUpdateOrder = async () => {
             Xem
           </Button>
           <Button
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => handleEditClick(record)}
-            disabled={STATUS_FLOW[record.status]?.length === 0}
-          >
-            Sửa
-          </Button>
+  size="small"
+  icon={<EditOutlined />}
+  onClick={() => handleEditClick(record)}
+  disabled={
+    STATUS_FLOW[record.status]?.length === 0 ||
+    ["shipped", "delivered", "received", "delivery_failed"].includes(record.status)
+  }
+/>
+
         </Space>
       ),
     },
@@ -358,139 +370,108 @@ const handleUpdateOrder = async () => {
 
 
       {/* Modal xem chi tiết */}
-      <Modal
-        title="Chi tiết đơn hàng"
-        open={isViewModalVisible}
-        onCancel={() => setIsViewModalVisible(false)}
-        footer={null}
-        width={800}
-      >
-        {selectedOrder && (
-          <Descriptions bordered column={1}>
-            <Descriptions.Item label="Mã đơn">
-              {selectedOrder._id}
-            </Descriptions.Item>
+    <Modal
+  title="Chi tiết đơn hàng"
+  open={isViewModalVisible}
+  onCancel={() => setIsViewModalVisible(false)}
+  footer={null}
+  width={800}
+>
+  {selectedOrder && (
+    <Descriptions bordered column={1}>
+      <Descriptions.Item label="Mã đơn">
+        {selectedOrder._id}
+      </Descriptions.Item>
+
       <Descriptions.Item label="Thông tin giao hàng">
-  <>
-    <div><strong>Họ tên:</strong> {selectedOrder.shippingInfo?.fullName}</div>
-    <div><strong>SĐT:</strong> {selectedOrder.shippingInfo?.phone}</div>
-    <div>
-      <strong>Địa chỉ:</strong> {selectedOrder.shippingInfo?.address}, {selectedOrder.shippingInfo?.ward},{" "}
-      {selectedOrder.shippingInfo?.district}, {selectedOrder.shippingInfo?.province}
-    </div>
-  </>
-</Descriptions.Item>
+        <>
+          <div><strong>Họ tên:</strong> {selectedOrder.shippingInfo?.fullName}</div>
+          <div><strong>SĐT:</strong> {selectedOrder.shippingInfo?.phone}</div>
+          <div>
+            <strong>Địa chỉ:</strong>{" "}
+            {[
+              selectedOrder.shippingInfo?.address,
+              selectedOrder.shippingInfo?.ward,
+              selectedOrder.shippingInfo?.district,
+              selectedOrder.shippingInfo?.province,
+            ]
+              .filter(Boolean)
+              .join(", ")}
+          </div>
+        </>
+      </Descriptions.Item>
 
-            <Descriptions.Item label="Thanh toán">
-              {selectedOrder.paymentMethod}
-            </Descriptions.Item>
-           <Descriptions.Item label="Trạng thái">
-  <Tag color={STATUS_COLORS[selectedOrder.status]}>
-    {STATUS_LABELS[selectedOrder.status]}
-  </Tag>
-</Descriptions.Item>
+      <Descriptions.Item label="Trạng thái">
+        <Tag color={STATUS_COLORS[selectedOrder.status]}>
+          {STATUS_LABELS[selectedOrder.status]}
+        </Tag>
+      </Descriptions.Item>
 
+      <Descriptions.Item label="Sản phẩm">
+        <Table
+          dataSource={selectedOrder.items}
+          rowKey="_id"
+          pagination={false}
+          size="small"
+          bordered
+        >
+          <Table.Column
+            title="Ảnh"
+            dataIndex="variantId"
+            render={(variant) =>
+              variant?.imageUrl?.[0] ? (
+                <Image src={variant.imageUrl[0]} width={50} />
+              ) : (
+                <div style={{ width: 50, height: 50, background: "#eee" }}>Không có</div>
+              )
+            }
+          />
+          <Table.Column
+            title="Tên"
+            dataIndex="variantId"
+            render={(variant) => variant?.name}
+          />
+          <Table.Column title="Số lượng" dataIndex="quantity" />
+          <Table.Column
+            title="Đơn giá"
+            dataIndex="price"
+            render={(price) => `${price?.toLocaleString?.() || 0}₫`}
+          />
+          <Table.Column
+            title="Thành tiền"
+            render={(_, item) =>
+              `${(item.price * item.quantity).toLocaleString()}₫`
+            }
+          />
+        </Table>
 
-{selectedOrder.status === "return_requested" &&
-  selectedOrder.returnRequest?.reason && (
-    <Descriptions.Item label="Lý do trả hàng">
-      {selectedOrder.returnRequest.reason}
-    </Descriptions.Item>
-)}
-{selectedOrder?.returnRequest?.status === "rejected" &&
-  selectedOrder.returnRequest?.reason && (
-    <Descriptions.Item label="Lý do từ chối hoàn trả">
-      {selectedOrder.returnRequest.reason}
-    </Descriptions.Item>
-)}
+        <div style={{ marginTop: 16 }}>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <span><strong>Tạm tính:</strong></span>
+            <span>
+              {Number(
+                selectedOrder.items?.reduce((sum, item) => sum + item.price * item.quantity, 0) || 0
+              ).toLocaleString()}₫
+            </span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", color: "red" }}>
+            <span><strong>Giảm giá:</strong></span>
+            <span>-{Number(selectedOrder.discount || 0).toLocaleString()}₫</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <span><strong>Thành tiền (đã giảm):</strong></span>
+            <span>{Number(selectedOrder.totalAmount || 0).toLocaleString()}₫</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <span><strong>Tổng tiền:</strong></span>
+            <span>{Number(selectedOrder.totalAmount || 0).toLocaleString()}₫</span>
+          </div>
+        </div>
+      </Descriptions.Item>
+    </Descriptions>
+  )}
+</Modal>
 
-
-
-
-
-            <Descriptions.Item label="Ngày tạo">
-              {new Date(selectedOrder.createdAt).toLocaleString()}
-            </Descriptions.Item>
-<Descriptions.Item label="Sản phẩm">
-  <>
-    <Table
-      dataSource={selectedOrder.items}
-      rowKey="_id"
-      pagination={false}
-      size="small"
-      bordered
-    >
-      <Table.Column
-        title="Ảnh"
-        dataIndex="variantId"
-        render={(variant: Variant | null) =>
-          variant?.imageUrl?.[0] ? (
-            <Image src={variant.imageUrl[0]} width={50} />
-          ) : (
-            <div style={{ width: 50, height: 50, background: "#eee" }}>
-              No image
-            </div>
-          )
-        }
-      />
-      <Table.Column
-        title="Tên"
-        dataIndex="variantId"
-        render={(variant: Variant | null) => variant?.name}
-      />
-      <Table.Column title="Số lượng" dataIndex="quantity" />
-      <Table.Column
-        title="Đơn giá"
-        dataIndex="price"
-        render={(price: number) => `${price.toLocaleString()}₫`}
-      />
-      <Table.Column
-        title="Thành tiền"
-        render={(_, item: OrderItem) =>
-          `${(item.price * item.quantity).toLocaleString()}₫`
-        }
-      />
-    </Table>
-
-    {/* Chi tiết thanh toán dưới bảng */}
-    <div style={{ marginTop: 16 }}>
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <span><strong>Tạm tính:</strong></span>
-        <span>
-          {selectedOrder.items
-            ?.reduce((sum, item) => sum + item.price * item.quantity, 0)
-            .toLocaleString()}
-          ₫
-        </span>
-      </div>
-      <div style={{ display: "flex", justifyContent: "space-between", color: "red" }}>
-        <span><strong>Giảm giá:</strong></span>
-        <span>-{selectedOrder.discount?.toLocaleString() ?? 0}₫</span>
-      </div>
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <span><strong>Thành tiền (đã giảm):</strong></span>
-        <span>{selectedOrder.totalAmount.toLocaleString()}₫</span>
-      </div>
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <span><strong>Tổng tiền:</strong></span>
-        <span>{selectedOrder.totalAmount.toLocaleString()}₫</span>
-      </div>
-    </div>
-  </>
-</Descriptions.Item>
-
-
-
-
-
-
-
-            <Descriptions.Item label="Tổng tiền">
-              <Text strong>{selectedOrder.totalAmount.toLocaleString()}₫</Text>
-            </Descriptions.Item>
-          </Descriptions>
-        )}
-      </Modal>
     </>
   );
 };

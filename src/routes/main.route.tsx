@@ -30,8 +30,14 @@ import UserDetail from "../pages/User/DetailUser";
 import FlashSaleList from "../pages/Flashsale/FlashSaleList";
 import CreateFlashSale from "../pages/Flashsale/CreateFlashSale";
 import EditFlashSale from "../pages/Flashsale/EditFlashSale";
+
+import ShipperOrderList from "../pages/shipper/ListOrderbyShip";
+import ListVoucher from "../pages/voucher/ListVoucher";
+import CreateCoupon from "../pages/voucher/AddVoucher";
+import EditCoupon from "../pages/voucher/EditVoucher";
 import EditProduct from "../pages/Order/Product/EditProduct";
 import DeletedProductList from "../pages/Order/Product/components/DeletedProductList";
+
 
 
 
@@ -48,6 +54,15 @@ export const router = createBrowserRouter([
     path: "/unauthorized",
     element: <Unauthorized />,
   },
+  {
+  path: "/shipper/orders",
+  element: (
+    <ProtectedRoute allowedRoles={["shipper"]}>
+      <ShipperOrderList />
+    </ProtectedRoute>
+  ),
+},
+
   {
     path: "/dashboard",
     element: (
@@ -134,6 +149,19 @@ export const router = createBrowserRouter([
           path: "flashsale/edit/:id",
           element: <EditFlashSale />,
         },
+        {
+            path:"vouchers",
+            element:<ListVoucher />
+        },
+        {
+          path: "vouchers/add",
+          element: <CreateCoupon />,
+        },
+        {
+          path: "vouchers/:id",
+          element: <EditCoupon />,
+        },
+       
 
 
           // User
