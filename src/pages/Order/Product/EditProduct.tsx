@@ -11,8 +11,8 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import type { UploadFile } from "antd/es/upload/interface";
-import ImageUpload from "../../components/common/ImageUpload";
 import { toast } from "react-toastify";
+import ImageUpload from "../../../components/common/ImageUpload";
 
 const EditProduct = () => {
   const [form] = Form.useForm();
