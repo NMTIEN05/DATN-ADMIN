@@ -143,6 +143,8 @@ const ListUser: React.FC = () => {
         if (role === "admin") color = "red";
         else if (role === "staff") color = "orange";
         else if (role === "user") color = "green";
+        else if (role === "shipper") color = "blue";
+
         return (
           <Tag color={color} style={{ fontWeight: "bold", textTransform: "uppercase" }}>
             {role}
@@ -240,6 +242,9 @@ const ListUser: React.FC = () => {
               <Option value="admin">Admin</Option>
               <Option value="staff">Staff</Option>
               <Option value="user">User</Option>
+              
+              <Option value="shipper">Shipper</Option>
+
             </Select>
           </Form.Item>
           <Form.Item

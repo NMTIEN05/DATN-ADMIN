@@ -199,6 +199,8 @@ const CreateUser: React.FC = () => {
                     <Option value="admin">Admin</Option>
                     <Option value="staff">Staff</Option>
                     <Option value="user">User</Option>
+                    <Option value="shipper">Shipper</Option>
+
                   </Select>
                 </Form.Item>
               </Col>
