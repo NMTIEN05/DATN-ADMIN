@@ -8,7 +8,7 @@ import UpdateCategory from "../pages/Category/UpdateCategory";
 
 import CreateProduct from "../pages/Product/CreateProduct";
 import ProductList from "../pages/Product/ListProduct";
-import EditProduct from "../pages/Product/EditProduct";
+
 
 import CreateProductGroup from "../pages/Capacity/CreateProductGroup";
 import ListProductGroup from "../pages/Capacity/ListProductGroup";
@@ -19,7 +19,6 @@ import Login from "../pages/Auth/Login";
 import Unauthorized from "../pages/Auth/Unauthorized";
 import ProtectedRoute from "../pages/Auth/ProtectedRoute";
 import AdminOrderList from "../pages/Order/ListOrder";
-import DeletedProductList from "../pages/Product/components/DeletedProductList";
 import DeletedCategoryList from "../pages/Category/DeletedCategoryList";
 import DeletedProductGroupList from "../pages/Capacity/DeletedProductGroupList";
 import Dashboard from "../pages/Dash/PT";
@@ -31,6 +30,8 @@ import UserDetail from "../pages/User/DetailUser";
 import FlashSaleList from "../pages/Flashsale/FlashSaleList";
 import CreateFlashSale from "../pages/Flashsale/CreateFlashSale";
 import EditFlashSale from "../pages/Flashsale/EditFlashSale";
+import EditProduct from "../pages/Order/Product/EditProduct";
+import DeletedProductList from "../pages/Order/Product/components/DeletedProductList";
 
 
 
