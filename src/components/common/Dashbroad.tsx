@@ -54,13 +54,13 @@ const DashLayout: React.FC = () => {
           label: 'Series Sản Phẩm',
         },
         {
-      key: '/dashboard/product',
-      icon: <MobileOutlined />,
-      label: 'Sản Phẩm',
-    },
+          key: '/dashboard/product',
+          icon: <MobileOutlined />,
+          label: 'Sản Phẩm',
+        },
       ],
     },
-    
+
     {
       key: '/dashboard/orders',
       icon: <ShoppingOutlined />,
@@ -82,7 +82,7 @@ const DashLayout: React.FC = () => {
       label: 'Flash Sale',
     },
     {
-      key: '/dashboard/posts',
+      key: '/dashboard/blogs',
       icon: <EditOutlined />,
       label: 'Bài Viết',
     },

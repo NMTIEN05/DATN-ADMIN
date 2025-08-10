@@ -23,6 +23,7 @@ import DeletedCategoryList from "../pages/Category/DeletedCategoryList";
 import DeletedProductGroupList from "../pages/Capacity/DeletedProductGroupList";
 import Dashboard from "../pages/Dash/PT";
 import BannerList from "../pages/banner/bannerList";
+import BlogList from "../pages/blog/BlogList";
 import CreateUser from "../pages/User/CreateUser";
 import UserDetail from "../pages/User/DetailUser";
 
@@ -37,9 +38,7 @@ import CreateCoupon from "../pages/voucher/AddVoucher";
 import EditCoupon from "../pages/voucher/EditVoucher";
 import EditProduct from "../pages/Order/Product/EditProduct";
 import DeletedProductList from "../pages/Order/Product/components/DeletedProductList";
-
-
-
+// import middleware này
 
 export const router = createBrowserRouter([
   {
@@ -84,7 +83,7 @@ export const router = createBrowserRouter([
             path: "category",
             element: <ListCategory />,
           },
-            {
+          {
             path: "phantich",
             element: <Dashboard />,
           },
@@ -133,35 +132,34 @@ export const router = createBrowserRouter([
             element: <EditProduct />,
           },
           {
-  path: "product/deleted",
-  element: <DeletedProductList />,
-        },
-        // FlashSale
-        {
-          path: "flashsale",
-          element: <FlashSaleList />,
-        },
-        {
-          path: "flashsale/create",
-          element: <CreateFlashSale />,
-        },
-        {
-          path: "flashsale/edit/:id",
-          element: <EditFlashSale />,
-        },
-        {
+            path: "product/deleted",
+            element: <DeletedProductList />,
+          },
+          // FlashSale
+          {
+            path: "flashsale",
+            element: <FlashSaleList />,
+          },
+          {
+            path: "flashsale/create",
+            element: <CreateFlashSale />,
+          },
+          {
+            path: "flashsale/edit/:id",
+            element: <EditFlashSale />,
+          },
+          {
             path:"vouchers",
             element:<ListVoucher />
-        },
-        {
-          path: "vouchers/add",
-          element: <CreateCoupon />,
-        },
-        {
-          path: "vouchers/:id",
-          element: <EditCoupon />,
-        },
-       
+          },
+          {
+            path: "vouchers/add",
+            element: <CreateCoupon />,
+          },
+          {
+            path: "vouchers/:id",
+            element: <EditCoupon />,
+          },
 
 
           // User
@@ -170,23 +168,27 @@ export const router = createBrowserRouter([
             element: <ListUser />,
           },
           {
-  path: "users/create",
-  element: <CreateUser />,
-},
-{
-  path: "users/:id",
-  element: <UserDetail />,
-},
-
+            path: "users/create",
+            element: <CreateUser />,
+          },
+          {
+            path: "users/:id",
+            element: <UserDetail />,
+          },
 
           {
-            path:"orders",
-            element:<AdminOrderList />
+            path: "orders",
+            element: <AdminOrderList />
           },
           // Banner
           {
             path: "banners",
             element: <BannerList />,
+          }
+          ,
+          {
+            path: "blogs",
+            element: <BlogList />,
           }
         ],
       },
