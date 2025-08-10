@@ -7,7 +7,8 @@ export const bannerService = {
   // Lấy tất cả banners
   getBanners: async (): Promise<Banner[]> => {
     const response = await axios.get(`${API_BASE_URL}/banners`);
-    return response.data;
+    // Backend trả { data: Banner[], total, page, limit }
+    return response.data?.data ?? [];
   },
 
   // Lấy banner theo ID
@@ -36,6 +37,7 @@ export const bannerService = {
   // Lấy banners active
   getActiveBanners: async (): Promise<Banner[]> => {
     const response = await axios.get(`${API_BASE_URL}/banners`);
-    return response.data.filter((banner: Banner) => banner.isActive);
+    const list: Banner[] = response.data?.data ?? [];
+    return list.filter((banner: Banner) => banner.isActive);
   }
 }; 

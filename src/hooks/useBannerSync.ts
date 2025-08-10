@@ -11,8 +11,8 @@ export const useBannerSync = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await bannerService.getBanners();
-      setBanners(response.data);
+      const list = await bannerService.getBanners();
+      setBanners(list);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Lỗi khi tải banner');
     } finally {

@@ -254,9 +254,9 @@ const BannerList: React.FC = () => {
 
       <Table
         columns={columns}
-        dataSource={banners}
+         dataSource={banners}
         loading={loading}
-        rowKey="id"
+         rowKey="_id"
         pagination={{
           ...pagination,
           showSizeChanger: true,
