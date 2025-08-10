@@ -54,13 +54,13 @@ export const router = createBrowserRouter([
     element: <Unauthorized />,
   },
   {
-  path: "/shipper/orders",
-  element: (
-    <ProtectedRoute allowedRoles={["shipper"]}>
-      <ShipperOrderList />
-    </ProtectedRoute>
-  ),
-},
+    path: "/shipper/orders",
+    element: (
+      <ProtectedRoute allowedRoles={["shipper"]}>
+        <ShipperOrderList />
+      </ProtectedRoute>
+    ),
+  },
 
   {
     path: "/dashboard",
@@ -149,8 +149,8 @@ export const router = createBrowserRouter([
             element: <EditFlashSale />,
           },
           {
-            path:"vouchers",
-            element:<ListVoucher />
+            path: "vouchers",
+            element: <ListVoucher />
           },
           {
             path: "vouchers/add",
