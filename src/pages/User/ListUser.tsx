@@ -37,6 +37,7 @@ const ListUser: React.FC = () => {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
+  const [lockReason, setLockReason] = useState("");
 
   const navigate = useNavigate();
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
@@ -88,10 +89,25 @@ const ListUser: React.FC = () => {
       toast.success("Cập nhật người dùng thành công");
       setIsModalVisible(false);
       fetchUsers();
-    } catch (error) {
-      toast.error("Cập nhật thất bại");
+    } catch (error:any) {
+      toast.error( error.response?.data?.message || "Cập nhật người dùng thất bại");
     }
   };
+  const handleLockUnlockUser = async (userId: string, isActive: boolean, reason = "") => {
+  try {
+    await axios.put(
+      `http://localhost:8888/api/auth/${userId}`,
+      { isActive, lockReason: reason },
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }
+    );
+    toast.success(isActive ? "Mở khóa thành công" : "Khóa tài khoản thành công");
+    fetchUsers();
+  } catch (error: any) {
+    toast.error(error.response?.data?.message || "Cập nhật thất bại");
+  }
+};
 
   useEffect(() => {
     fetchUsers();
@@ -162,46 +178,99 @@ const ListUser: React.FC = () => {
         </Tag>
       ),
     },
-    {
-      title: "Thao tác",
-      key: "action",
-      render: (_: any, record: User) =>
-        <Space size="middle">
+{
+  title: "Thao tác",
+  key: "action",
+  render: (_: any, record: User) => (
+    <Space size="middle">
+      <Button
+        type="link"
+        onClick={() => navigate(`/dashboard/users/${record._id}`)}
+      >
+        Chi tiết
+      </Button>
+
+      {isAdmin && (
+        <>
+          {/* Sửa */}
           <Button
             type="link"
-            onClick={() => navigate(`/dashboard/users/${record._id}`)}
+            onClick={() => {
+              setEditingUser(record);
+              form.setFieldsValue({
+                role: record.role,
+                isActive: record.isActive,
+              });
+              setIsModalVisible(true);
+            }}
           >
-            Chi tiết
+            Sửa
           </Button>
-          {isAdmin && (
-            <>
+
+          {/* Khóa / Mở khóa */}
+          {record.role !== "admin" && (
+            record.isActive ? (
               <Button
                 type="link"
+                danger
                 onClick={() => {
-                  setEditingUser(record);
-                  form.setFieldsValue({
-                    role: record.role,
-                    isActive: record.isActive,
+                  Modal.confirm({
+                    title: "Nhập lý do khóa tài khoản",
+                    content: (
+                      <textarea
+                        style={{ width: "100%", minHeight: "80px" }}
+                        placeholder="Nhập lý do..."
+                        onChange={(e) => setLockReason(e.target.value)}
+                      />
+                    ),
+                    okText: "Xác nhận",
+                    cancelText: "Hủy",
+                    onOk: () => {
+                      onOk: () => {
+  if (!lockReason.trim()) {
+    message.error("Vui lòng nhập lý do");
+    throw new Error("Missing lock reason"); // hoặc return Promise.reject(new Error("..."))
+  }
+  return handleLockUnlockUser(record._id, false, lockReason);
+}
+
+                      return handleLockUnlockUser(record._id, false, lockReason);
+                    },
                   });
-                  setIsModalVisible(true);
                 }}
               >
-                Sửa
+                Khóa
               </Button>
-              <Popconfirm
-                title="Bạn có chắc chắn muốn xoá người dùng này không?"
-                okText="Xoá"
-                cancelText="Hủy"
-                onConfirm={() => handleDeleteUser(record._id)}
+            ) : (
+              <Button
+                type="link"
+                onClick={() => handleLockUnlockUser(record._id, true, "")}
               >
-                <Button type="link" danger>
-                  Xoá
-                </Button>
-              </Popconfirm>
-            </>
+                Mở khóa
+              </Button>
+            )
           )}
-        </Space>
-    },
+
+          {/* Xóa */}
+          {record.role !== "admin" && (
+            <Popconfirm
+              title="Bạn có chắc chắn muốn xoá người dùng này không?"
+              okText="Xoá"
+              cancelText="Hủy"
+              onConfirm={() => handleDeleteUser(record._id)}
+            >
+              <Button type="link" danger>
+                Xoá
+              </Button>
+            </Popconfirm>
+          )}
+        </>
+      )}
+    </Space>
+  )
+}
+
+
   ];
 
   return (

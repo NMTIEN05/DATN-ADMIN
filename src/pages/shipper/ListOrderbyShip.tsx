@@ -143,6 +143,15 @@ const ShipperOrderList = () => {
         </Tag>
       ),
     },
+{
+  title: "Tiền COD",
+  render: (_, record) => 
+    record.paymentMethod?.toLowerCase() === "cod"
+      ? `${Number(record.totalAmount || 0).toLocaleString()}₫`
+      : "0₫ (Đã thanh toán online)"
+},
+
+
     {
       title: "Hành động",
       render: (_, order) => (
@@ -294,44 +303,78 @@ const ShipperOrderList = () => {
                 render={(_, item) =>
                   `${Number((item?.price || 0) * (item?.quantity || 0)).toLocaleString()}₫`
                 }
+                
+                
               />
+         
+
             </Table>
 
-            <div style={{ marginTop: 16 }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span><strong>Tạm tính:</strong></span>
-                <span>
-                  {Number(
-                    editingOrder.items?.reduce(
-                      (sum, item) => sum + (item?.price || 0) * (item?.quantity || 0),
-                      0
-                    ) || 0
-                  ).toLocaleString()}₫
-                </span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", color: "red" }}>
-                <span><strong>Giảm giá:</strong></span>
-                <span>-{Number(editingOrder.discount || 0).toLocaleString()}₫</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span><strong>Thành tiền (đã giảm):</strong></span>
-                <span>{Number(editingOrder.totalAmount || 0).toLocaleString()}₫</span>
-              </div>
-              {selectedStatus === "delivery_failed" && (
-  <Form.Item
-    label="Lý do giao hàng không thành công"
-    name="failReason"
-    rules={[{ required: true, message: "Vui lòng nhập lý do" }]}
-  >
-    <textarea
-      rows={3}
-      placeholder="VD: Không liên lạc được, khách từ chối nhận, sai địa chỉ..."
-      className="w-full p-2 border border-gray-300 rounded"
-    />
-  </Form.Item>
-)}
+           <div style={{ marginTop: 16 }}>
+  {/* Tạm tính */}
+  <div style={{ display: "flex", justifyContent: "space-between" }}>
+    <span><strong>Tạm tính:</strong></span>
+    <span>
+      {Number(
+        editingOrder.items?.reduce(
+          (sum, item) => sum + (item?.price || 0) * (item?.quantity || 0),
+          0
+        ) || 0
+      ).toLocaleString()}₫
+    </span>
+  </div>
 
-            </div>
+  {/* Giảm giá */}
+  <div style={{ display: "flex", justifyContent: "space-between", color: "red" }}>
+    <span><strong>Giảm giá:</strong></span>
+    <span>-{Number(editingOrder.discount || 0).toLocaleString()}₫</span>
+  </div>
+
+  {/* Thành tiền */}
+  <div style={{ display: "flex", justifyContent: "space-between" }}>
+    <span><strong>Thành tiền (đã giảm):</strong></span>
+    <span>{Number(editingOrder.totalAmount || 0).toLocaleString()}₫</span>
+  </div>
+
+ {/* Phương thức thanh toán */}
+<div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+  <span><strong>Phương thức thanh toán:</strong></span>
+  <span>
+    {editingOrder.paymentMethod === "COD"
+      ? "Thanh toán khi nhận hàng (COD)"
+      : "Thanh toán online"}
+  </span>
+</div>
+
+{/* Tổng tiền shipper phải thu */}
+<div style={{ display: "flex", justifyContent: "space-between", color: "blue", marginTop: 8 }}>
+  <span><strong>Tổng tiền shipper phải thu:</strong></span>
+  <span>
+    {editingOrder.paymentMethod === "COD"
+      ? `${Number(editingOrder.totalAmount || 0).toLocaleString()}₫`
+      : "0₫ (Đã thanh toán online)"}
+  </span>
+</div>
+
+
+
+
+  {/* Lý do giao hàng không thành công */}
+  {selectedStatus === "delivery_failed" && (
+    <Form.Item
+      label="Lý do giao hàng không thành công"
+      name="failReason"
+      rules={[{ required: true, message: "Vui lòng nhập lý do" }]}
+    >
+      <textarea
+        rows={3}
+        placeholder="VD: Không liên lạc được, khách từ chối nhận, sai địa chỉ..."
+        className="w-full p-2 border border-gray-300 rounded"
+      />
+    </Form.Item>
+  )}
+</div>
+
           </>
         )}
       </Modal>
