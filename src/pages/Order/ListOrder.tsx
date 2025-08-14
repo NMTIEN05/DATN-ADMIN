@@ -14,6 +14,7 @@ import {
 } from "antd";
 import axiosInstance from "../../utils/axiosInstance";
 import { EditOutlined, EyeOutlined } from "@ant-design/icons";
+// import { title } from "process";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -110,6 +111,7 @@ interface Order {
     status?: string;
     reason?: string;
     requestedAt?: string;
+    
   }; // ✅ sửa đúng ở đây
 
 }
@@ -122,6 +124,8 @@ const AdminOrderList: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isViewModalVisible, setIsViewModalVisible] = useState(false);
   const [form] = Form.useForm();
+  const [shippers, setShippers] = useState<{ _id: string; full_name: string }[]>([]);
+const [selectedShipperId, setSelectedShipperId] = useState<string | undefined>(undefined)
 const rejectReason = Form.useWatch("rejectReason", form);
 
 
@@ -141,21 +145,52 @@ const [selectedStatus, setSelectedStatus] = useState<string>();
       setLoading(false);
     }
   };
+const fetchShippers = async () => {
+  try {
+    const res = await axiosInstance.get("http://localhost:8888/api/auth/shipper");
+    console.log("🔎 Shippers:", res.data);
+    if (res.data.success && Array.isArray(res.data.data)) {
+      setShippers(res.data.data);
+    } else {
+      message.error("Dữ liệu shipper không hợp lệ");
+    }
+  } catch (err) {
+    message.error("Lỗi khi tải danh sách shipper");
+  }
+};
 
+
+const handleEditClick = (order: Order) => {
+  setEditingOrder(order);
+  form.setFieldsValue({ status: order.status });
+
+  // Nếu trạng thái đơn là ready_to_ship thì lấy shipper hiện tại (nếu có)
+  if (order.status === "ready_to_ship") {
+    setSelectedShipperId(order.shipperId || undefined);
+    fetchShippers();
+  } else {
+    setSelectedShipperId(undefined);
+  }
+
+  setSelectedStatus(order.status);
+  setIsModalVisible(true);
+};
   useEffect(() => {
     fetchOrders();
   }, []);
 
-  const handleEditClick = (order: Order) => {
-    setEditingOrder(order);
-    form.setFieldsValue({ status: order.status });
-    setSelectedStatus(order.status); // ✅ THÊM dòng này
-    setIsModalVisible(true);
-  };
+ 
 
 const handleUpdateOrder = async () => {
   try {
     const values = await form.validateFields();
+
+    // Kiểm tra trạng thái mới khác trạng thái hiện tại không
+    if (values.status === editingOrder?.status) {
+      message.warning("Đã chọn shipper thành công");
+      return; // dừng xử lý nếu trạng thái không đổi
+    }
+
     const payload: any = { status: values.status };
 
     if (
@@ -167,7 +202,6 @@ const handleUpdateOrder = async () => {
         return;
       }
 
-      // ✅ Sửa ở đây: Nếu chọn "Lý do khác" → lấy giá trị cụ thể từ customRejectReason
       if (values.rejectReason === "Lý do khác") {
         if (!values.customRejectReason || values.customRejectReason.trim() === "") {
           message.error("Vui lòng nhập lý do cụ thể");
@@ -179,6 +213,15 @@ const handleUpdateOrder = async () => {
       }
     }
 
+    // Nếu trạng thái mới là "ready_to_ship", bắt buộc chọn shipper
+    if (values.status === "ready_to_ship") {
+      if (!selectedShipperId) {
+        message.error("Vui lòng chọn shipper để giao hàng");
+        return;
+      }
+      payload.shipperId = selectedShipperId;
+    }
+
     await axiosInstance.put(`/orders/${editingOrder?._id}/status`, payload);
     message.success("Cập nhật thành công");
     fetchOrders();
@@ -188,6 +231,7 @@ const handleUpdateOrder = async () => {
     message.error("Cập nhật thất bại");
   }
 };
+
 
 
 
@@ -218,6 +262,22 @@ const handleUpdateOrder = async () => {
       title: "Thanh toán",
       dataIndex: "paymentMethod",
       render: (method: string) => <Tag color="blue">{method}</Tag>,
+    },
+    {
+      title :"Shipper",
+      dataIndex: "shipperId",
+      render: (shipper: User) => (
+        <div>
+          {shipper ? (
+            <>
+              <div>{shipper.full_name || shipper.email || shipper.username}</div>
+              <div>{shipper.phone}</div>
+            </>
+          ) : (
+            "Chưa có shipper"
+          )}
+        </div>
+      ),
     },
     {
       title: "Trạng thái",
@@ -331,6 +391,30 @@ const handleUpdateOrder = async () => {
         ))}
       </Select>
     </Form.Item>
+<Form.Item
+  label="Chọn Shipper"
+  name="shipperId"
+  rules={[
+    { 
+      required: selectedStatus === "ready_to_ship", 
+      message: "Vui lòng chọn shipper để giao hàng" 
+    }
+  ]}
+  hidden={selectedStatus !== "ready_to_ship"}
+>
+  <Select
+    placeholder="Chọn shipper giao hàng"
+    onChange={(value) => setSelectedShipperId(value)}
+    value={selectedShipperId}
+  >
+    {shippers.map((shipper) => (
+      <Option key={shipper._id} value={shipper._id}>
+        {shipper.full_name || shipper.email || shipper.username}
+      </Option>
+    ))}
+  </Select>
+</Form.Item>
+
 
     {/* Hiện lý do từ chối nếu đang từ "return_requested" -> "delivered" */}
   {editingOrder?.status === "return_requested" &&
@@ -384,28 +468,57 @@ const handleUpdateOrder = async () => {
       </Descriptions.Item>
 
       <Descriptions.Item label="Thông tin giao hàng">
-        <>
-          <div><strong>Họ tên:</strong> {selectedOrder.shippingInfo?.fullName}</div>
-          <div><strong>SĐT:</strong> {selectedOrder.shippingInfo?.phone}</div>
-          <div>
-            <strong>Địa chỉ:</strong>{" "}
-            {[
-              selectedOrder.shippingInfo?.address,
-              selectedOrder.shippingInfo?.ward,
-              selectedOrder.shippingInfo?.district,
-              selectedOrder.shippingInfo?.province,
-            ]
-              .filter(Boolean)
-              .join(", ")}
-          </div>
-        </>
-      </Descriptions.Item>
+  <>
+    <div><strong>Họ tên:</strong> {selectedOrder.shippingInfo?.fullName}</div>
+    <div><strong>SĐT:</strong> {selectedOrder.shippingInfo?.phone}</div>
+    <div>
+      <strong>Địa chỉ:</strong>{" "}
+      {[selectedOrder.shippingInfo?.address, selectedOrder.shippingInfo?.ward, selectedOrder.shippingInfo?.district, selectedOrder.shippingInfo?.province]
+        .filter(Boolean)
+        .join(", ")}
+    </div>
+  </>
+</Descriptions.Item>
+
+{selectedOrder.shipperId && (
+  <Descriptions.Item label="Thông tin Shipper">
+    <>
+      <div><strong>Họ tên:</strong> {selectedOrder.shipperId.full_name || selectedOrder.shipperId.username}</div>
+      <div><strong>SĐT:</strong> {selectedOrder.shipperId.phone}</div>
+    </>
+  </Descriptions.Item>
+)}
+
 
       <Descriptions.Item label="Trạng thái">
         <Tag color={STATUS_COLORS[selectedOrder.status]}>
           {STATUS_LABELS[selectedOrder.status]}
         </Tag>
       </Descriptions.Item>
+      {/* Nếu đơn hàng có yêu cầu trả hàng */}
+{selectedOrder.returnRequest?.status && (
+  <>
+    <Descriptions.Item label="Trạng thái hoàn trả">
+      <Tag color={STATUS_COLORS[selectedOrder.returnRequest.status]}>
+        {STATUS_LABELS[selectedOrder.returnRequest.status]}
+      </Tag>
+    </Descriptions.Item>
+
+    {selectedOrder.returnRequest.reason && (
+      <Descriptions.Item label="Lý do hoàn trả">
+        {selectedOrder.returnRequest.reason}
+      </Descriptions.Item>
+    )}
+
+    {selectedOrder.returnRequest.requestedAt && (
+      <Descriptions.Item label="Ngày yêu cầu">
+        {new Date(selectedOrder.returnRequest.requestedAt).toLocaleString("vi-VN")}
+      </Descriptions.Item>
+    )}
+  </>
+)}
+
+
 
       <Descriptions.Item label="Sản phẩm">
         <Table
