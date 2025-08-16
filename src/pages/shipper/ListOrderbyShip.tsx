@@ -43,10 +43,14 @@ const ShipperOrderList = () => {
 
   const token = localStorage.getItem("token");
 
- const fetchOrders = async () => {
+const fetchOrders = async () => {
   setLoading(true);
   try {
-    const res = await axios.get("http://localhost:8888/api/shipper?limit=9", {
+    const res = await axios.get("http://localhost:8888/api/orders/shipper", {
+      params: {
+        shipperId: localStorage.getItem("shipperId"), // Lấy từ localStorage
+        limit: 99999,
+      },
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -54,11 +58,13 @@ const ShipperOrderList = () => {
 
     const allOrders = res.data.orders || [];
 
-    // 👉 Cho phép hiển thị đơn `ready_to_ship` + `shipped`
-// etOrders();
+    // 👉 Lọc ra đơn "ready_to_ship" + "shipped" (nếu bạn chỉ muốn 2 trạng thái này)
+    const filteredOrders = allOrders.filter(
+      (order: any) =>
+        order.status === "ready_to_ship" || order.status === "shipped"
+    );
 
-
-    setOrders(allOrders);
+    setOrders(filteredOrders);
   } catch (error) {
     console.error(error);
     message.error("Lỗi khi tải danh sách đơn hàng");
@@ -66,6 +72,7 @@ const ShipperOrderList = () => {
     setLoading(false);
   }
 };
+
 
 
   useEffect(() => {
