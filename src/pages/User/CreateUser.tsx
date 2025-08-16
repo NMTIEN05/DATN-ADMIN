@@ -20,7 +20,7 @@ const CreateUser: React.FC = () => {
 
   const onFinish = async (values: any) => {
     try {
-      const { isActive, ...payload } = values;
+      const { isActive, confirm_password, ...payload } = values;
       if (/@/.test(payload.username)) {
         form.setFields([
           {
@@ -31,15 +31,11 @@ const CreateUser: React.FC = () => {
         return;
       }
 
-      await axios.post(
-        "http://localhost:8888/api/auth/register",
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      await axios.post("http://localhost:8888/api/auth/register", payload, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       form.resetFields();
       navigate("/dashboard/users");
     } catch (err: any) {
@@ -107,9 +103,7 @@ const CreateUser: React.FC = () => {
                     {
                       validator: (_, value) =>
                         value && /@/.test(value)
-                          ? Promise.reject(
-                              "Không được nhập email vào đây!"
-                            )
+                          ? Promise.reject("Không được nhập email vào đây!")
                           : Promise.resolve(),
                     },
                   ]}
@@ -156,9 +150,7 @@ const CreateUser: React.FC = () => {
                 <Form.Item
                   label="Họ và tên"
                   name="full_name"
-                  rules={[
-                    { required: true, message: "Vui lòng nhập họ tên!" },
-                  ]}
+                  rules={[{ required: true, message: "Vui lòng nhập họ tên!" }]}
                 >
                   <Input
                     prefix={<UserOutlined />}
@@ -176,6 +168,7 @@ const CreateUser: React.FC = () => {
                   rules={[
                     { required: true, message: "Vui lòng nhập mật khẩu!" },
                   ]}
+                  hasFeedback
                 >
                   <Input.Password
                     prefix={<LockOutlined />}
@@ -183,13 +176,42 @@ const CreateUser: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
+
+              {/* Xác nhận mật khẩu */}
+              <Col xs={24} md={12}>
+                <Form.Item
+                  label="Xác nhận mật khẩu"
+                  name="confirm_password"
+                  dependencies={["password"]}
+                  hasFeedback
+                  rules={[
+                    { required: true, message: "Vui lòng xác nhận mật khẩu!" },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        if (!value || getFieldValue("password") === value) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(
+                          new Error("Mật khẩu xác nhận không trùng khớp!")
+                        );
+                      },
+                    }),
+                  ]}
+                >
+                  <Input.Password
+                    prefix={<LockOutlined />}
+                    placeholder="Nhập lại mật khẩu"
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={24}>
               <Col xs={24} md={12}>
                 <Form.Item
                   label="Phân quyền"
                   name="role"
-                  rules={[
-                    { required: true, message: "Chọn quyền tài khoản!" },
-                  ]}
+                  rules={[{ required: true, message: "Chọn quyền tài khoản!" }]}
                 >
                   <Select
                     placeholder="Chọn quyền tài khoản"
@@ -200,20 +222,10 @@ const CreateUser: React.FC = () => {
                     <Option value="staff">Staff</Option>
                     <Option value="user">User</Option>
                     <Option value="shipper">Shipper</Option>
-
                   </Select>
                 </Form.Item>
               </Col>
             </Row>
-
-            {/* Nếu muốn nhập địa chỉ, bỏ comment */}
-            {/* <Row>
-              <Col span={24}>
-                <Form.Item label="Địa chỉ" name="address">
-                  <Input placeholder="Nhập địa chỉ (nếu có)" />
-                </Form.Item>
-              </Col>
-            </Row> */}
 
             <Form.Item style={{ marginTop: 22 }}>
               <Button
