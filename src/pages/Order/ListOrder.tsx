@@ -14,6 +14,7 @@ import {
 } from "antd";
 import axiosInstance from "../../utils/axiosInstance";
 import { EditOutlined, EyeOutlined } from "@ant-design/icons";
+import axios from "axios";
 // import { title } from "process";
 
 const { Option } = Select;
@@ -27,7 +28,7 @@ const STATUS_FLOW: Record<string, string[]> = {
   delivered: ["received", "return_requested"],
   received: ["return_requested"],
 
-  return_requested: ["returned", "cancelled", "delivered", "rejected"],
+  return_requested: ["returned", "delivered", "rejected"],
   returned: [],
   delivery_failed: [],
   rejected: [],
@@ -144,17 +145,25 @@ const rejectReason = Form.useWatch("rejectReason", form);
   };
 const fetchShippers = async () => {
   try {
-    const res = await axiosInstance.get("http://localhost:8888/api/auth/shipper");
-    console.log("🔎 Shippers:", res.data);
-    if (res.data.success && Array.isArray(res.data.data)) {
+    const token = localStorage.getItem("token"); // hoặc từ context
+    const res = await axios.get("http://localhost:8888/api/auth/shipper", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (res.data?.success && Array.isArray(res.data.data)) {
+      console.log("🚚 Danh sách shipper:", res.data.data);
       setShippers(res.data.data);
     } else {
-      message.error("Dữ liệu shipper không hợp lệ");
+      console.warn("🚨 Response không đúng định dạng:", res.data);
+      setShippers([]);
     }
-  } catch (err) {
+  } catch (err: any) {
+    console.error("❌ Lỗi khi tải danh sách shipper:", err.response?.data || err.message || err);
     message.error("Lỗi khi tải danh sách shipper");
   }
 };
+
+
 
 
 const handleEditClick = (order: Order) => {
@@ -177,57 +186,74 @@ const handleEditClick = (order: Order) => {
   }, []);
 
  
-
 const handleUpdateOrder = async () => {
   try {
+    if (!editingOrder?._id) {
+      message.error("Không xác định đơn hàng để cập nhật");
+      return;
+    }
+
     const values = await form.validateFields();
 
-    // Kiểm tra trạng thái mới khác trạng thái hiện tại không
-    if (values.status === editingOrder?.status) {
-      message.warning("Đã chọn shipper thành công");
-      return; // dừng xử lý nếu trạng thái không đổi
+    if (values.status === editingOrder.status) {
+      message.warning("Trạng thái không thay đổi");
+      return;
     }
 
     const payload: any = { status: values.status };
 
-      if (
-        editingOrder?.status === "return_requested" &&
-        ["delivered", "rejected"].includes(values.status)
-      ) {
-        if (!values.rejectReason || values.rejectReason.trim() === "") {
-          message.error("Vui lòng chọn lý do từ chối hoàn trả");
-          return;
-        }
-
-      if (values.rejectReason === "Lý do khác") {
-        if (!values.customRejectReason || values.customRejectReason.trim() === "") {
-          message.error("Vui lòng nhập lý do cụ thể");
-          return;
-        }
-        payload.rejectReason = values.customRejectReason;
-      } else {
-        payload.rejectReason = values.rejectReason;
+    // Reject reason
+    if (
+      editingOrder.status === "return_requested" &&
+      ["delivered", "rejected"].includes(values.status)
+    ) {
+      if (!values.rejectReason?.trim()) {
+        message.error("Vui lòng chọn lý do từ chối hoàn trả");
+        return;
+      }
+      payload.rejectReason =
+        values.rejectReason === "Lý do khác"
+          ? values.customRejectReason?.trim()
+          : values.rejectReason;
+      if (!payload.rejectReason) {
+        message.error("Vui lòng nhập lý do cụ thể");
+        return;
       }
     }
 
-    // Nếu trạng thái mới là "ready_to_ship", bắt buộc chọn shipper
+    // Shipper
     if (values.status === "ready_to_ship") {
-      if (!selectedShipperId) {
+      if (!values.shipperId) {
         message.error("Vui lòng chọn shipper để giao hàng");
         return;
       }
-      payload.shipperId = selectedShipperId;
+      payload.shipperId = values.shipperId;
     }
 
-    await axiosInstance.put(`/orders/${editingOrder?._id}/status`, payload);
+    const token = localStorage.getItem("token");
+    const { data: updatedOrder } = await axios.put(
+      `http://localhost:8888/api/orders/${editingOrder._id}/status`,
+      payload,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
     message.success("Cập nhật thành công");
-    fetchOrders();
+
+    // 🔥 Update state cục bộ thay vì chờ fetchOrders
+    setOrders((prev) =>
+      prev.map((o) => (o._id === updatedOrder._id ? updatedOrder : o))
+    );
+
     setIsModalVisible(false);
   } catch (err: any) {
-    console.error("❌ Update lỗi:", err.response?.data);
+    console.error("❌ Update lỗi:", err.response?.data || err.message || err);
     message.error("Cập nhật thất bại");
   }
 };
+
+
+
+
 
 
 
@@ -284,26 +310,27 @@ const handleUpdateOrder = async () => {
       },
     },
     {
-      title: "Thanh toán",
-      dataIndex: "paymentStatus",
-      render: (status: string) => {
-        let color = "default";
-        let text = "Không xác định";
+  title: "Thanh toán",
+  dataIndex: "paymentStatus",
+  render: (status: string) => {
+    const STATUS_MAP: Record<
+      string,
+      { color: string; text: string }
+    > = {
+      paid: { color: "green", text: "Đã thanh toán" },
+      unpaid: { color: "red", text: "Chưa thanh toán" },
+      failed: { color: "orange", text: "Thanh toán thất bại" },
+    };
 
-        if (status === "paid") {
-          color = "green";
-          text = "Đã thanh toán";
-        } else if (status === "unpaid") {
-          color = "red";
-          text = "Chưa thanh toán";
-        } else if (status === "failed") {
-          color = "orange";
-          text = "Thanh toán thất bại";
-        }
+    const { color, text } = STATUS_MAP[status] || {
+      color: "default",
+      text: "Không xác định",
+    };
 
-        return <Tag color={color}>{text}</Tag>;
-      },
-    },
+    return <Tag color={color}>{text}</Tag>;
+  },
+},
+
     {
       title: "Hành động",
       key: "actions",
@@ -384,28 +411,24 @@ const handleUpdateOrder = async () => {
       </Select>
     </Form.Item>
 <Form.Item
-  label="Chọn Shipper"
   name="shipperId"
+  label="Chọn Shipper"
   rules={[
-    { 
-      required: selectedStatus === "ready_to_ship", 
-      message: "Vui lòng chọn shipper để giao hàng" 
-    }
+    { required: selectedStatus === "ready_to_ship", message: "Vui lòng chọn shipper" }
   ]}
   hidden={selectedStatus !== "ready_to_ship"}
 >
-  <Select
-    placeholder="Chọn shipper giao hàng"
-    onChange={(value) => setSelectedShipperId(value)}
-    value={selectedShipperId}
-  >
+  <Select placeholder="Chọn shipper giao hàng">
     {shippers.map((shipper) => (
       <Option key={shipper._id} value={shipper._id}>
         {shipper.full_name || shipper.email || shipper.username}
+        {" - "}
+        {shipper.phone}
       </Option>
     ))}
   </Select>
 </Form.Item>
+
 
 
           {/* Lý do từ chối khi từ return_requested -> delivered/rejected */}

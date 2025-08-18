@@ -13,6 +13,10 @@ import {
 } from "antd";
 import axios from "axios";
 
+interface OrderListProps {
+  orders: any[]; // hoặc type chính xác của order
+  onSelectStatus: (status: any) => void;
+}
 const { Option } = Select;
 const { Text } = Typography;
 
@@ -59,10 +63,12 @@ const fetchOrders = async () => {
     const allOrders = res.data.orders || [];
 
     // 👉 Lọc ra đơn "ready_to_ship" + "shipped" (nếu bạn chỉ muốn 2 trạng thái này)
-    const filteredOrders = allOrders.filter(
-      (order: any) =>
-        order.status === "ready_to_ship" || order.status === "shipped"
-    );
+const filteredOrders = allOrders.filter(
+  (order: any) =>
+    ["ready_to_ship", "shipped", "delivered", "delivery_failed"].includes(order.status)
+);
+setOrders(filteredOrders);
+
 
     setOrders(filteredOrders);
   } catch (error) {

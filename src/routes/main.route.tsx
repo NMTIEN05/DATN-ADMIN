@@ -37,6 +37,9 @@ import CreateCoupon from "../pages/voucher/AddVoucher";
 import EditCoupon from "../pages/voucher/EditVoucher";
 import EditProduct from "../pages/Order/Product/EditProduct";
 import DeletedProductList from "../pages/Order/Product/components/DeletedProductList";
+import ShipperDashboard from "../pages/shipper/Dashboard";
+import ShipperStats from "../pages/shipper/ShipperStats";
+
 
 
 
@@ -192,4 +195,22 @@ export const router = createBrowserRouter([
       },
     ],
   },
+ {
+  path: "/shipper/orders",
+  element: (
+    <ProtectedRoute allowedRoles={["shipper"]}>
+      <ShipperDashboard />
+    </ProtectedRoute>
+  ),
+children: [
+  { path: "", element: <Navigate to="orders" replace /> },
+  { path: "orders", element: <ShipperOrderList /> },
+  { 
+    path: "thongke", 
+    element: <ShipperStats  /> 
+  },
+],
+
+}
+
 ]);
