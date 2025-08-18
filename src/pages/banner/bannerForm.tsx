@@ -11,11 +11,11 @@ interface BannerFormProps {
   loading?: boolean;
 }
 
-const BannerForm: React.FC<BannerFormProps> = ({ 
-  banner, 
-  onSubmit, 
-  onCancel, 
-  loading = false 
+const BannerForm: React.FC<BannerFormProps> = ({
+  banner,
+  onSubmit,
+  onCancel,
+  loading = false
 }) => {
   const [form] = Form.useForm();
 
@@ -93,9 +93,9 @@ const BannerForm: React.FC<BannerFormProps> = ({
         name="description"
         label="Mô tả"
       >
-        <Input.TextArea 
-          rows={3} 
-          placeholder="Nhập mô tả banner (không bắt buộc)" 
+        <Input.TextArea
+          rows={3}
+          placeholder="Nhập mô tả banner (không bắt buộc)"
         />
       </Form.Item>
 
@@ -110,9 +110,9 @@ const BannerForm: React.FC<BannerFormProps> = ({
         name="order"
         label="Thứ tự"
       >
-        <InputNumber 
-          min={0} 
-          placeholder="Thứ tự hiển thị" 
+        <InputNumber
+          min={0}
+          placeholder="Thứ tự hiển thị"
           style={{ width: '100%' }}
         />
       </Form.Item>

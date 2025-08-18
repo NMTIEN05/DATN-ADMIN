@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Table, 
-  Tag, 
-  Space, 
-  Button, 
-  Modal, 
-  message, 
-  Image, 
+import {
+  Table,
+  Tag,
+  Space,
+  Button,
+  Modal,
+  message,
+  Image,
   Switch,
   Popconfirm,
   Tooltip,
   Alert
 } from 'antd';
-import { 
-  PlusOutlined, 
-  EditOutlined, 
-  DeleteOutlined, 
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
   EyeOutlined,
   UploadOutlined
 } from '@ant-design/icons';
@@ -24,17 +24,17 @@ import type { Banner, CreateBannerRequest, UpdateBannerRequest } from '../../typ
 import BannerForm from './bannerForm';
 
 const BannerList: React.FC = () => {
-  const { 
-    banners, 
-    loading, 
-    error, 
-    fetchBanners, 
-    createBanner, 
-    updateBanner, 
+  const {
+    banners,
+    loading,
+    error,
+    fetchBanners,
+    createBanner,
+    updateBanner,
     deleteBanner,
-    clearError 
+    clearError
   } = useBannerStore();
-  
+
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [pagination, setPagination] = useState({
@@ -87,10 +87,10 @@ const BannerList: React.FC = () => {
       render: (imageUrl: string, record: Banner) => {
         const imageSrc = imageUrl || record.image; // Fallback cho imageUrl
         // Tạo URL đầy đủ nếu là relative path
-        const fullImageUrl = imageSrc?.startsWith('http') 
-          ? imageSrc 
+        const fullImageUrl = imageSrc?.startsWith('http')
+          ? imageSrc
           : `http://localhost:8888${imageSrc}`;
-        
+
         return (
           <Image
             width={80}
@@ -164,16 +164,16 @@ const BannerList: React.FC = () => {
       render: (_: any, record: Banner) => (
         <Space size="small">
           <Tooltip title="Xem chi tiết">
-            <Button 
-              type="text" 
-              icon={<EyeOutlined />} 
+            <Button
+              type="text"
+              icon={<EyeOutlined />}
               size="small"
             />
           </Tooltip>
           <Tooltip title="Chỉnh sửa">
-            <Button 
-              type="text" 
-              icon={<EditOutlined />} 
+            <Button
+              type="text"
+              icon={<EditOutlined />}
               size="small"
               onClick={() => {
                 setEditingBanner(record);
@@ -188,10 +188,10 @@ const BannerList: React.FC = () => {
             cancelText="Không"
           >
             <Tooltip title="Xóa">
-              <Button 
-                type="text" 
-                danger 
-                icon={<DeleteOutlined />} 
+              <Button
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
                 size="small"
               />
             </Tooltip>
@@ -222,9 +222,9 @@ const BannerList: React.FC = () => {
           style={{ marginBottom: 16 }}
         />
       )}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 16,
         borderBottom: '2px solid #f0f0f0',
@@ -254,9 +254,9 @@ const BannerList: React.FC = () => {
 
       <Table
         columns={columns}
-         dataSource={banners}
+        dataSource={banners}
         loading={loading}
-         rowKey="_id"
+        rowKey="_id"
         pagination={{
           ...pagination,
           showSizeChanger: true,
