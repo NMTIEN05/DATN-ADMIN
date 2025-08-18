@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Table,
   Button,
@@ -10,6 +10,14 @@ import {
   Modal,
   Form,
   Image,
+  Tag,
+  Switch,
+  Tooltip,
+  Drawer,
+  List,
+  Badge,
+  Empty,
+  Divider,
 } from "antd";
 import type { UploadFile } from "antd/es/upload/interface";
 import type { Variant, Product } from "../../../types/product/product.type";
@@ -23,11 +31,7 @@ interface Props {
   colors: any[];
 }
 
-const VariantTable: React.FC<Props> = ({
-  product,
-  variants,
-  fetchProducts,
-}) => {
+const VariantTable: React.FC<Props> = ({ product, variants, fetchProducts }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editedData, setEditedData] = useState<Partial<Variant>>({});
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -40,16 +44,45 @@ const VariantTable: React.FC<Props> = ({
   const [editingFileList, setEditingFileList] = useState<UploadFile[]>([]);
   const [editingImageUrl, setEditingImageUrl] = useState<string[]>([]);
 
-  // Tính toán màu sắc cho từng variant
-  const parsedVariants = variants.map((variant) => {
-    const colorAttr = variant.attributes?.find(
-      (attr) => attr.attributeId?.name === "Màu sắc"
-    );
-    return {
-      ...variant,
-      color: colorAttr?.attributeValueId?.value || "Không xác định",
-    };
-  });
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+  const [showHidden, setShowHidden] = useState(false);
+
+  const [hiddenDrawerOpen, setHiddenDrawerOpen] = useState(false);
+
+  const toggleHidden = (id: string) => {
+    setHiddenIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const unhideAll = () => setHiddenIds(new Set());
+
+  const parsedVariants = useMemo(
+    () =>
+      variants.map((variant) => {
+        const colorAttr = variant.attributes?.find(
+          (attr) => attr.attributeId?.name === "Màu sắc"
+        );
+        return {
+          ...variant,
+          color: colorAttr?.attributeValueId?.value || "Không xác định",
+        };
+      }),
+    [variants]
+  );
+
+  const dataSource = useMemo(
+    () => parsedVariants.filter((v) => showHidden || !hiddenIds.has(v._id)),
+    [parsedVariants, showHidden, hiddenIds]
+  );
+
+  const hiddenList = useMemo(
+    () => parsedVariants.filter((v) => hiddenIds.has(v._id)),
+    [parsedVariants, hiddenIds]
+  );
 
   // Xoá biến thể
   const handleDelete = async (_id: string) => {
@@ -64,6 +97,11 @@ const VariantTable: React.FC<Props> = ({
         return;
       }
       toast.success("Xoá biến thể thành công!", { position: "top-center" });
+      setHiddenIds((prev) => {
+        const next = new Set(prev);
+        next.delete(_id);
+        return next;
+      });
       fetchProducts();
     } catch (err) {
       console.error("❌ Lỗi khi xoá:", err);
@@ -92,7 +130,7 @@ const VariantTable: React.FC<Props> = ({
       price: record.price,
       stock: record.stock,
       color:
-        record.attributes?.find(attr => attr.attributeId?.name === "Màu sắc")
+        record.attributes?.find((attr) => attr.attributeId?.name === "Màu sắc")
           ?.attributeValueId?.value || "",
     });
 
@@ -116,17 +154,14 @@ const VariantTable: React.FC<Props> = ({
   // Lưu chỉnh sửa biến thể
   const handleSave = async () => {
     try {
-      const res = await fetch(
-        `http://localhost:8888/api/variants/${editingId}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...editedData,
-            imageUrl: editingImageUrl,
-          }),
-        }
-      );
+      const res = await fetch(`http://localhost:8888/api/variants/${editingId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...editedData,
+          imageUrl: editingImageUrl,
+        }),
+      });
 
       if (res.ok) {
         toast.success("Cập nhật thành công!", { position: "top-center" });
@@ -215,18 +250,54 @@ const VariantTable: React.FC<Props> = ({
     }
   };
 
+  const header = (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+      <strong>Biến thể sản phẩm</strong>
+      <Tag color="blue">{parsedVariants.length}</Tag>
+      <span style={{ color: "#888" }}>{product?.title}</span>
+
+      <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
+        <Tooltip title="Bật để hiển thị cả những biến thể đang bị ẩn trong bảng">
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ color: "#666" }}>Hiện trong bảng</span>
+            <Switch checked={showHidden} onChange={setShowHidden} />
+          </div>
+        </Tooltip>
+
+        {/* Nút mở Drawer xem & khôi phục đã ẩn */}
+        <Badge count={hiddenList.length} size="small">
+          <Button onClick={() => setHiddenDrawerOpen(true)}>Đã ẩn</Button>
+        </Badge>
+
+        <Button onClick={unhideAll} disabled={!hiddenIds.size}>
+          Hiện tất cả
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <div
       style={{
         background: "#e6f7ff",
         border: "1px solid #91d5ff",
         borderRadius: 10,
-        padding: 16,
+        padding: 12,
         marginTop: 12,
         boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
       }}
     >
-      <Table dataSource={parsedVariants} rowKey="_id" pagination={false}>
+      {/* Header */}
+      {header}
+
+      {/* Bảng */}
+      <Table
+        dataSource={dataSource}
+        rowKey="_id"
+        pagination={false}
+        rowClassName={(record: Variant) => (hiddenIds.has(record._id) ? "vt-hidden-row" : "")}
+        style={{ marginTop: 12 }}
+      >
         <Table.Column title="STT" render={(_, __, index) => index + 1} />
         <Table.Column title="Tên Sản Phẩm" dataIndex="name" />
         <Table.Column title="Màu sắc" dataIndex="color" />
@@ -244,37 +315,42 @@ const VariantTable: React.FC<Props> = ({
         <Table.Column
           title="Giá"
           dataIndex="price"
-          render={(price: number) => price?.toLocaleString() + "₫"}
+          render={(price: number) => (price ?? 0).toLocaleString() + "₫"}
         />
         <Table.Column title="Tồn kho" dataIndex="stock" />
         <Table.Column
           title="Hành động"
-          render={(_, record: Variant) => (
-            <Space>
-              <Button onClick={() => handleEdit(record)}>Sửa</Button>
-              <Popconfirm
-                title="Bạn có chắc muốn xoá không?"
-                onConfirm={() => handleDelete(record._id)}
-                okText="Xoá"
-                cancelText="Huỷ"
-                placement="bottomRight"
-              >
-                <Button type="link" danger>
-                  Xoá
+          render={(_, record: Variant) => {
+            const isHidden = hiddenIds.has(record._id);
+            return (
+              <Space>
+                <Button onClick={() => handleEdit(record)}>Sửa</Button>
+                <Popconfirm
+                  title="Bạn có chắc muốn xoá không?"
+                  onConfirm={() => handleDelete(record._id)}
+                  okText="Xoá"
+                  cancelText="Huỷ"
+                  placement="bottomRight"
+                >
+                  <Button type="link" danger>
+                    Xoá
+                  </Button>
+                </Popconfirm>
+                <Button type="default" onClick={() => toggleHidden(record._id)}>
+                  {isHidden ? "Hiện" : "Ẩn"}
                 </Button>
-              </Popconfirm>
-            </Space>
-          )}
+              </Space>
+            );
+          }}
         />
       </Table>
 
-      <div className="mt-4 text-right">
+      <div className="mt-4 text-right" style={{ marginTop: 12, textAlign: "right" }}>
         <Button type="dashed" onClick={() => setAddModalOpen(true)}>
           + Thêm biến thể
         </Button>
       </div>
 
-      {/* Modal Thêm biến thể */}
       <Modal
         title="Thêm biến thể mới"
         open={addModalOpen}
@@ -397,6 +473,111 @@ const VariantTable: React.FC<Props> = ({
           </Form.Item>
         </Form>
       </Modal>
+
+      {/* Drawer: Biến thể đã ẩn */}
+      <Drawer
+        title={
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span>Biến thể đã ẩn</span>
+            <Tag color="red">{hiddenList.length}</Tag>
+          </div>
+        }
+        placement="right"
+        width={420}
+        open={hiddenDrawerOpen}
+        onClose={() => setHiddenDrawerOpen(false)}
+        extra={
+          <Space>
+            <Button onClick={unhideAll} disabled={!hiddenIds.size}>
+              Khôi phục tất cả
+            </Button>
+          </Space>
+        }
+      >
+        {hiddenList.length === 0 ? (
+          <Empty description="Không có biến thể nào đang ẩn" />
+        ) : (
+          <>
+            <List
+              itemLayout="horizontal"
+              dataSource={hiddenList}
+              renderItem={(item) => {
+                const thumb = item.imageUrl?.[0];
+                return (
+                  <List.Item
+                    actions={[
+                      <Button key="restore" type="link" onClick={() => toggleHidden(item._id)}>
+                        Khôi phục
+                      </Button>,
+                      <Popconfirm
+                        key="delete"
+                        title="Xoá biến thể này?"
+                        onConfirm={() => handleDelete(item._id)}
+                        okText="Xoá"
+                        cancelText="Huỷ"
+                        placement="left"
+                      >
+                        <Button type="link" danger>
+                          Xoá
+                        </Button>
+                      </Popconfirm>,
+                    ]}
+                  >
+                    <List.Item.Meta
+                      avatar={
+                        thumb ? (
+                          <Image src={thumb} width={48} height={48} style={{ objectFit: "cover" }} />
+                        ) : (
+                          <div
+                            style={{
+                              width: 48,
+                              height: 48,
+                              background: "#f0f0f0",
+                              borderRadius: 6,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: "#999",
+                              fontSize: 10,
+                            }}
+                          >
+                            No img
+                          </div>
+                        )
+                      }
+                      title={
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                          <span>{item.name}</span>
+                          <Tag>{item.color}</Tag>
+                        </div>
+                      }
+                      description={
+                        <div style={{ display: "flex", gap: 12, color: "#666" }}>
+                          <span>Giá: {(item.price ?? 0).toLocaleString()}₫</span>
+                          <span>Tồn: {item.stock}</span>
+                        </div>
+                      }
+                    />
+                  </List.Item>
+                );
+              }}
+            />
+            <Divider />
+            <div style={{ textAlign: "right" }}>
+              <Button onClick={() => setHiddenDrawerOpen(false)}>Đóng</Button>
+            </div>
+          </>
+        )}
+      </Drawer>
+
+
+      <style>
+        {`
+          .vt-hidden-row {
+            opacity: 0.5;
+          }
+        `}
+      </style>
     </div>
   );
 };
