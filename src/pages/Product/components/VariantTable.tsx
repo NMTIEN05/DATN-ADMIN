@@ -44,11 +44,9 @@ const VariantTable: React.FC<Props> = ({ product, variants, fetchProducts }) => 
   const [editingFileList, setEditingFileList] = useState<UploadFile[]>([]);
   const [editingImageUrl, setEditingImageUrl] = useState<string[]>([]);
 
-  // Ẩn/hiện từng biến thể
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const [showHidden, setShowHidden] = useState(false);
 
-  // Drawer quản lý "đã ẩn"
   const [hiddenDrawerOpen, setHiddenDrawerOpen] = useState(false);
 
   const toggleHidden = (id: string) => {
@@ -353,7 +351,6 @@ const VariantTable: React.FC<Props> = ({ product, variants, fetchProducts }) => 
         </Button>
       </div>
 
-      {/* Modal Thêm biến thể */}
       <Modal
         title="Thêm biến thể mới"
         open={addModalOpen}
@@ -573,7 +570,7 @@ const VariantTable: React.FC<Props> = ({ product, variants, fetchProducts }) => 
         )}
       </Drawer>
 
-      {/* style cho dòng đã ẩn khi bật "Hiện trong bảng" */}
+
       <style>
         {`
           .vt-hidden-row {
