@@ -1,105 +1,179 @@
-import React from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Table, Button, Space, Modal, Popconfirm, Tag } from 'antd';
-import Column from 'antd/es/table/Column';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import dayjs from 'dayjs';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { Table, Button, Space, Modal, Tag, Spin, message } from "antd";
+import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
+import { toast } from "react-toastify";
 
 const { confirm } = Modal;
 
-const ListFlashSale = () => {
+interface Product {
+  _id: string;
+  title: string;
+  slug: string;
+  capacity: string;
+  imageUrl: string[];
+}
+
+interface FlashSale {
+  _id: string;
+  product: Product;
+  salePrice: number;
+  quantity: number;
+  discountPercent: number;
+  startTime: string;
+  endTime: string;
+  limitQuantity: number;
+  isActive: boolean;
+}
+
+const FlashSaleList: React.FC = () => {
+  const [flashSales, setFlashSales] = useState<FlashSale[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
-  const { data: flashSales, isLoading } = useQuery({
-    queryKey: ['flashsales'],
-    queryFn: async () => {
-      const { data } = await axios.get(`${import.meta.env.VITE_PUBLIC_API_URL}api/flashsale`);
-      return data;
-    },
-  });
-
-  const { mutate: deleteFlashSale } = useMutation({
-    mutationFn: async (id: string) => {
-      await axios.delete(`${import.meta.env.VITE_PUBLIC_API_URL}api/flashsale/${id}`);
-      toast.success('✅ Xoá Flash Sale thành công!');
-      queryClient.invalidateQueries({ queryKey: ['flashsales'] });
-    },
-  });
+  const fetchFlashSales = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token"); // Lấy token từ localStorage
+      const res = await axios.get("http://localhost:8888/api/flashsale", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setFlashSales(res.data.data || []);
+    } catch (error: any) {
+      console.error("Lỗi khi fetch flash sale:", error);
+      toast.error(
+        error.response?.data?.message || "Không thể lấy dữ liệu Flash Sale"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDelete = (id: string) => {
     confirm({
-      title: 'Bạn có chắc chắn muốn xoá Flash Sale này không?',
-      okText: 'Xoá',
-      okType: 'danger',
-      cancelText: 'Huỷ',
-      onOk() {
-        deleteFlashSale(id);
+      title: "Bạn có chắc chắn muốn xoá Flash Sale này không?",
+      okText: "Xoá",
+      okType: "danger",
+      cancelText: "Huỷ",
+      onOk: async () => {
+        try {
+          const token = localStorage.getItem("accessToken");
+          await axios.delete(`http://localhost:8888/api/flashsale/${id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          toast.success("✅ Xoá Flash Sale thành công!");
+          fetchFlashSales(); // reload lại danh sách
+        } catch (error: any) {
+          console.error("Lỗi xoá flash sale:", error);
+          toast.error(
+            error.response?.data?.message || "Xoá Flash Sale thất bại!"
+          );
+        }
       },
     });
   };
 
+  useEffect(() => {
+    fetchFlashSales();
+  }, []);
+
+  if (loading) return <Spin tip="Đang tải danh sách Flash Sale..." />;
+
   return (
     <div>
-      <h2 className="text-3xl font-bold text-indigo-600 mb-5">Danh Sách Flash Sale</h2>
+      <h2 className="text-3xl font-bold text-indigo-600 mb-5">
+        Danh Sách Flash Sale
+      </h2>
 
       <div className="flex justify-between mb-5">
-        <Button type="primary" onClick={() => navigate('/dashboard/flashsale/create')}>
+        <Button type="primary" onClick={() => navigate("/dashboard/flashsale/create")}>
           Thêm mới
         </Button>
       </div>
 
-      <Table dataSource={flashSales?.data || []} rowKey="_id" loading={isLoading} pagination={{ pageSize: 5 }}>
-        <Column title="STT" render={(_, __, index) => index + 1} />
-        <Column title="Tên" dataIndex="title" />
-        <Column
-          title="Sản phẩm"
-          dataIndex="products"
-          render={(products: string[]) => (
-            <span>{products.length} sản phẩm</span>
+      <Table
+        dataSource={flashSales}
+        rowKey="_id"
+        pagination={{ pageSize: 5 }}
+      >
+        <Table.Column
+          title="STT"
+          render={(_, __, index) => index + 1}
+        />
+        <Table.Column
+          title="Ảnh"
+          dataIndex="product"
+          render={(product: Product) => (
+            <img
+              src={product.imageUrl[0]}
+              alt={product.title}
+              style={{ width: 60, height: 60, objectFit: "cover" }}
+            />
           )}
         />
-        <Column title="Giảm giá (%)" dataIndex="discountPercent" />
-        <Column
+        <Table.Column
+          title="Sản phẩm"
+          dataIndex="product"
+          render={(product: Product) => product.title}
+        />
+        <Table.Column
+          title="Giá sale"
+          dataIndex="salePrice"
+          render={(val: number) => val.toLocaleString() + " ₫"}
+        />
+        <Table.Column
+          title="Giảm giá (%)"
+          dataIndex="discountPercent"
+        />
+        <Table.Column
+          title="Số lượng"
+          dataIndex="quantity"
+        />
+        <Table.Column
           title="Bắt đầu"
           dataIndex="startTime"
-          render={(val) => dayjs(val).format('DD/MM/YYYY HH:mm')}
+          render={(val: string) => dayjs(val).format("DD/MM/YYYY HH:mm")}
         />
-        <Column
+        <Table.Column
           title="Kết thúc"
           dataIndex="endTime"
-          render={(val) => dayjs(val).format('DD/MM/YYYY HH:mm')}
+          render={(val: string) => dayjs(val).format("DD/MM/YYYY HH:mm")}
         />
-        <Column title="Giới hạn" dataIndex="limitQuantity" />
-        <Column
+        <Table.Column
+          title="Giới hạn"
+          dataIndex="limitQuantity"
+        />
+        <Table.Column
           title="Trạng thái"
           dataIndex="isActive"
           render={(active: boolean) => (
-            <Tag color={active ? 'green' : 'red'}>
-              {active ? 'Kích hoạt' : 'Vô hiệu hóa'}
+            <Tag color={active ? "green" : "red"}>
+              {active ? "Kích hoạt" : "Vô hiệu hóa"}
             </Tag>
           )}
         />
-        <Column
+        <Table.Column
           title="Chức năng"
-          render={(_, record: any) => (
+          render={(_, record: FlashSale) => (
             <Space>
-              <Button type="primary" onClick={() => navigate(`/dashboard/flashsale/edit/${record._id}`)}>
+              <Button
+                type="primary"
+                onClick={() => navigate(`/dashboard/flashsale/edit/${record._id}`)}
+              >
                 Sửa
               </Button>
-              <Popconfirm
-                title="Bạn có chắc muốn xoá?"
-                onConfirm={() => handleDelete(record._id)}
-                okText="Xoá"
-                cancelText="Huỷ"
-                placement="bottomRight"
+              <Button
+                type="default"
+                danger
+                onClick={() => handleDelete(record._id)}
               >
-                <Button type="link" danger>
-                  Xoá
-                </Button>
-              </Popconfirm>
+                Xoá
+              </Button>
             </Space>
           )}
         />
@@ -108,4 +182,4 @@ const ListFlashSale = () => {
   );
 };
 
-export default ListFlashSale;
+export default FlashSaleList;

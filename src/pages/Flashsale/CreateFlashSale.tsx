@@ -38,34 +38,42 @@ const CreateFlashSale = () => {
     fetchProducts();
   }, []);
 
-  const onFinish = async (values: any) => {
-    try {
-      const payload = {
-        title: values.title,
-        products: values.products, // đã là mảng ID
-        discountPercent: values.discountPercent,
-        startTime: values.startTime.toISOString(),
-        endTime: values.endTime.toISOString(),
-        limitQuantity: values.limitQuantity || 0,
-        isActive: values.isActive ?? true,
-      };
+const onFinish = async (values: any) => {
+  try {
+    // map products sang object { product, salePrice, quantity }
+    const mappedProducts = values.products.map((id: string) => ({
+      product: id,
+      salePrice: 1, // bạn có thể thay bằng input cho từng sp nếu muốn
+      quantity: 1,  // bạn có thể thay bằng input cho từng sp nếu muốn
+    }));
 
-      console.log("📤 Payload gửi đi:", payload);
+    const payload = {
+      title: values.title,
+      products: mappedProducts,
+      discountPercent: values.discountPercent,
+      startTime: values.startTime.toISOString(),
+      endTime: values.endTime.toISOString(),
+      limitQuantity: values.limitQuantity || 0,
+      isActive: values.isActive ?? true,
+    };
 
-      await axios.post(
-        `${import.meta.env.VITE_PUBLIC_API_URL}api/flashsale`,
-        payload
-      );
+    console.log("📤 Payload gửi đi:", payload);
 
-      toast.success("✅ Tạo Flash Sale thành công!");
-      setTimeout(() => {
-        navigate("/dashboard/flashsale");
-      }, 1500);
-    } catch (err: any) {
-      console.error("❌ Lỗi tạo Flash Sale:", err?.response?.data || err.message);
-      message.error("Tạo Flash Sale thất bại!");
-    }
-  };
+    await axios.post(
+      `${import.meta.env.VITE_PUBLIC_API_URL}api/flashsale`,
+      payload
+    );
+
+    toast.success("✅ Tạo Flash Sale thành công!");
+    setTimeout(() => {
+      navigate("/dashboard/flashsale");
+    }, 1500);
+  } catch (err: any) {
+    console.error("❌ Lỗi tạo Flash Sale:", err?.response?.data || err.message);
+    message.error("Tạo Flash Sale thất bại!");
+  }
+};
+
 
   return (
     <div>

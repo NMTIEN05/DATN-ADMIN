@@ -42,7 +42,7 @@
             },
           });
 
-          console.log('✅ Dữ liệu mã giảm giá:', data);
+          // console.log('✅ Dữ liệu mã giảm giá:', data);
           return data;
         } catch (error) {
           console.error('❌ Lỗi khi gọi API:', error);
