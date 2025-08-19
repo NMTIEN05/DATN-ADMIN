@@ -43,6 +43,7 @@ const Dashboard = () => {
           fetch('http://localhost:8888/api/dashbroad/best-sellers').then(res => res.json()),
           fetch('http://localhost:8888/api/dashbroad/low-stock').then(res => res.json()),
           fetch('http://localhost:8888/api/dashbroad/few-stock').then(res => res.json()),
+          
         ]);
 
         // Log data để debug
@@ -53,45 +54,22 @@ const Dashboard = () => {
         console.log('Few Stock:', fewStockRes);
 
         setSummary(summaryRes);
-        setChartData(chartRes);
+        setChartData(chartRes);   
 
         // Cải tiến function formatItems để xử lý data tốt hơn
-        const formatItems = (data) => {
-          console.log('Raw data for formatting:', data);
-          
-          if (!data) return [];
-          
-          // Nếu data là object có property chứa array
-          let items = data;
-          if (!Array.isArray(data)) {
-            // Thử các key phổ biến
-            items = data.data || data.items || data.products || [data];
-          }
-          
-          if (!Array.isArray(items)) {
-            console.log('Data không phải array:', items);
-            return [];
-          }
-
-          // Lọc bỏ duplicates và lấy top 3
-          const uniqueItems = items.filter((item, index, self) => {
-            const name = item.name || item.title || item.product_name || '-';
-            return index === self.findIndex(i => (i.name || i.title || i.product_name) === name);
-          });
-
-          console.log('Unique items:', uniqueItems);
-
-          return uniqueItems.slice(0, 3).map((item, index) => ({
-            ...item,
-            displayName: item.name || item.title || item.product_name || `Sản phẩm ${index + 1}`
-          }));
-        };
-
+        const formatItems = (items) => {
+  if (!Array.isArray(items)) return [];
+  return items.slice(0, 3).map((item, index) => ({
+    ...item,
+    displayName: item.title || `Sản phẩm ${index + 1}`, // backend trả title
+    displayQuantity: item.soldCount ?? item.stock ?? 0   // backend trả soldCount
+  }));
+};
         setExtraStats({
-          bestSellers: formatItems(bestSellerRes),
-          lowStock: formatItems(lowStockRes),
-          fewStock: formatItems(fewStockRes),
-        });
+  bestSellers: formatItems(bestSellerRes),
+  lowStock: formatItems(lowStockRes),
+  fewStock: formatItems(fewStockRes),
+});
 
       } catch (err) {
         console.error('Lỗi fetch dữ liệu dashboard:', err);
@@ -167,26 +145,30 @@ const Dashboard = () => {
     </div>
   );
 
-  const InfoCard = ({ title, items, color, bgColor }) => (
-    <div className={`${bgColor} rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300`}>
-      <div className="flex items-center mb-4">
-        <div className={`${color} bg-white bg-opacity-20 rounded-lg p-2 mr-3`}>
-          <ProductIcon />
-        </div>
-        <h3 className="text-white font-semibold text-lg">{title}</h3>
+const InfoCard = ({ title, items, color, bgColor }) => (
+  <div className={`${bgColor} rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300`}>
+    <div className="flex items-center mb-4">
+      <div className={`${color} bg-white bg-opacity-20 rounded-lg p-2 mr-3`}>
+        <ProductIcon />
       </div>
-      <div className="space-y-3">
-        {items.map((item, index) => (
-          <div key={index} className="flex items-center text-white text-opacity-90">
+      <h3 className="text-white font-semibold text-lg">{title}</h3>
+    </div>
+    <div className="space-y-3">
+      {items.map((item, index) => (
+        <div key={index} className="flex items-center justify-between text-white text-opacity-90">
+          <div className="flex items-center">
             <span className="bg-white bg-opacity-20 rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold mr-3">
               {index + 1}
             </span>
             <span className="text-sm">{item.displayName}</span>
           </div>
-        ))}
-      </div>
+         
+        </div>
+      ))}
     </div>
-  );
+  </div>
+);
+
 
   const formatTopItems = (items) => {
     return items.length

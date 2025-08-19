@@ -24,7 +24,7 @@ import DeletedProductGroupList from "../pages/Capacity/DeletedProductGroupList";
 import Dashboard from "../pages/Dash/PT";
 import BannerList from "../pages/banner/bannerList";
 import CreateUser from "../pages/User/CreateUser";
-import UserDetail from "../pages/User/DetailUser";
+
 
 
 import FlashSaleList from "../pages/Flashsale/FlashSaleList";
@@ -39,6 +39,7 @@ import EditProduct from "../pages/Order/Product/EditProduct";
 import DeletedProductList from "../pages/Order/Product/components/DeletedProductList";
 import ShipperDashboard from "../pages/shipper/Dashboard";
 import ShipperStats from "../pages/shipper/ShipperStats";
+import UserDetail from "../pages/shipper/DetailUser";
 
 
 
