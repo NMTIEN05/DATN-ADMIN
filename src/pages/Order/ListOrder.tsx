@@ -11,13 +11,15 @@ import {
   Typography,
   Image,
   Descriptions,
+  Input,
 } from "antd";
 import axiosInstance from "../../utils/axiosInstance";
-import { EditOutlined, EyeOutlined } from "@ant-design/icons";
+import { EditOutlined, EyeOutlined, SearchOutlined } from "@ant-design/icons";
 import { produce } from "immer"; // ✅ named export
 
 
 import axios from "axios";
+import { Search } from "lucide-react";
 // import { title } from "process";
 
 const { Option } = Select;
@@ -140,6 +142,11 @@ const PAYMENT_STATUS_COLORS: Record<string, string> = {
   failed: "orange",
 };
 
+const [pagination, setPagination] = useState({
+  current: 1,
+  pageSize: 10,
+  total: 0,
+});
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
@@ -152,20 +159,28 @@ const PAYMENT_STATUS_COLORS: Record<string, string> = {
   const rejectReason = Form.useWatch("rejectReason", form);
   const [selectedStatus, setSelectedStatus] = useState<string>();
 
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      const res = await axiosInstance.get("/orders?limit=100");
-      if (Array.isArray(res.data.data)) {
-        setOrders(res.data.data);
-      }
-    } catch (err) {
-      console.error(err);
-      message.error("Lỗi khi tải danh sách đơn hàng");
-    } finally {
-      setLoading(false);
+  const fetchOrders = async (page = 1, limit = 20) => {
+  try {
+    setLoading(true);
+    const res = await axiosInstance.get(
+      `/orders?page=${page}&limit=${limit}&sortBy=createdAt&order=desc`
+    );
+
+    if (res.data.success) {
+      setOrders(res.data.data);
+      setPagination({
+        current: page,
+        pageSize: limit,
+        total: res.data.pagination.total,
+      });
     }
-  };
+  } catch (err) {
+    message.error("Lỗi khi tải danh sách đơn hàng");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const fetchShippers = async () => {
     try {
@@ -287,6 +302,46 @@ const handleEditClick = (order: Order) => {
     message.error("Cập nhật thất bại");
   }
 };
+ const [orderId, setOrderId] = useState("");
+
+// Giữ onSearch chỉ xử lý khi có giá trị
+const onSearch = async (value: string) => {
+  if (!value) {
+    message.warning("Vui lòng nhập Order ID!");
+    return;
+  }
+
+  try {
+    setLoading(true);
+    const res = await axiosInstance.get("/orders?limit=50", {
+      params: { orderId: value },
+    });
+
+    if (res.data.success && res.data.data.length > 0) {
+      const foundOrder = res.data.data[0];
+      setOrders([foundOrder]);
+      setSelectedOrder(foundOrder);
+      setIsViewModalVisible(true);
+      message.success("Tìm đơn hàng thành công!");
+    } else {
+      setOrders([]);
+      message.warning("Không tìm thấy đơn hàng!");
+    }
+  } catch (err: any) {
+    console.error(err);
+    message.error(err.response?.data?.message || "Lỗi tìm đơn hàng!");
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Khi xóa input, tự load lại danh sách
+useEffect(() => {
+  if (orderId === "") {
+    fetchOrders();
+  }
+}, [orderId]);
+
 
 
   const columns = [
@@ -379,13 +434,30 @@ const handleEditClick = (order: Order) => {
   return (
     <>
       <h2 className="text-3xl font-bold text-indigo-600 mb-5">Danh sách đơn hàng</h2>
-
+<div className="mb-2 flex justify-end">
+      <Space>
+        <Input
+          placeholder="Nhập Order ID (vd: 46beac)"
+          value={orderId}
+          onChange={(e) => setOrderId(e.target.value)}
+          style={{ width: 300 }}
+          onPressEnter={() => onSearch(orderId)} // Enter cũng search
+        />
+        <Button
+          type="primary"
+          icon={<SearchOutlined />}
+          onClick={() => onSearch(orderId)} // ✅ wrap lại, không truyền nhầm
+        >
+          Tìm
+        </Button>
+      </Space>
+    </div>
       <Table
         rowKey="_id"
         columns={columns}
         dataSource={orders}
         loading={loading}
-        pagination={{ pageSize: 6 }}
+        pagination={{ pageSize: 7 }}
       />
 
       {/* Modal cập nhật */}
