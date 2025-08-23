@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { DatePicker, Button } from "antd";
+import dayjs from "dayjs";
 import {
   BarChart,
   Bar,
@@ -9,7 +11,7 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
-
+const { RangePicker } = DatePicker;
 const Dashboard = () => {
   const [summary, setSummary] = useState({
     totalRevenue: 0,
@@ -24,7 +26,7 @@ const Dashboard = () => {
     lowStock: [],
     fewStock: [],
   });
-
+  const [dateRange, setDateRange] = useState([null, null]);
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
@@ -91,14 +93,42 @@ const Dashboard = () => {
 
     fetchDashboardData();
   }, []);
+  const handleDateChange = (dates: any) => {
+  setDateRange(dates);
+};
+  const handleFilter = async () => {
+  if (!dateRange || !dateRange[0] || !dateRange[1]) return;
+  
+  const startDate = dayjs(dateRange[0]).format("YYYY-MM-DD");
+  const endDate = dayjs(dateRange[1]).format("YYYY-MM-DD");
 
+  const summaryByDate = await fetchSummaryByDate(startDate, endDate);
+  if (summaryByDate) {
+    setSummary({
+      totalRevenue: summaryByDate.totalRevenue,
+      totalOrders: summaryByDate.totalOrders,
+      totalUsers: summary.totalUsers, // user & product thường không đổi theo ngày
+      totalProducts: summary.totalProducts
+    });
+  }
+};
   // Icon components
   const DollarIcon = () => (
     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
     </svg>
   );
-
+  const fetchSummaryByDate = async (startDate:any, endDate:any) => {
+  try {
+    const res = await fetch(
+      `http://localhost:8888/api/dashbroad/summary-by-date?startDate=${startDate}&endDate=${endDate}`
+    );
+    return await res.json();
+  } catch (err) {
+    console.error("Lỗi khi fetch summary-by-date:", err);
+    return null;
+  }
+};
   const ShoppingCartIcon = () => (
     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.293 2.293c-.39.39-.39 1.024 0 1.414L7 18h10" />
@@ -194,7 +224,10 @@ const InfoCard = ({ title, items, color, bgColor }) => (
           <h1 className="text-4xl font-bold text-gray-800 mb-2">Tổng quan hệ thống</h1>
           <p className="text-gray-600">Dashboard quản lý và thống kê tổng quan</p>
         </div>
-
+      <div className="mb-8 flex items-center gap-4">
+  <RangePicker onChange={handleDateChange} />
+  <Button type="primary" onClick={handleFilter}>Lọc</Button>
+</div>
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
           <StatCard
