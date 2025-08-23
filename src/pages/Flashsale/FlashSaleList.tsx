@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Table, Button, Space, Modal, Tag, Spin, message } from "antd";
+import { Table, Button, Space, Modal, Tag, Spin } from "antd";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
@@ -17,9 +17,7 @@ interface Product {
 
 interface FlashSale {
   _id: string;
-  product: Product;
-  salePrice: number;
-  quantity: number;
+  products: Product[];   // ✅ BE trả về là mảng products
   discountPercent: number;
   startTime: string;
   endTime: string;
@@ -35,7 +33,7 @@ const FlashSaleList: React.FC = () => {
   const fetchFlashSales = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token"); // Lấy token từ localStorage
+      const token = localStorage.getItem("accessToken"); // ✅ BE yêu cầu accessToken
       const res = await axios.get("http://localhost:8888/api/flashsale", {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -43,7 +41,7 @@ const FlashSaleList: React.FC = () => {
       });
       setFlashSales(res.data.data || []);
     } catch (error: any) {
-      console.error("Lỗi khi fetch flash sale:", error);
+      console.error("❌ Lỗi khi fetch flash sales:", error);
       toast.error(
         error.response?.data?.message || "Không thể lấy dữ liệu Flash Sale"
       );
@@ -69,7 +67,7 @@ const FlashSaleList: React.FC = () => {
           toast.success("✅ Xoá Flash Sale thành công!");
           fetchFlashSales(); // reload lại danh sách
         } catch (error: any) {
-          console.error("Lỗi xoá flash sale:", error);
+          console.error("❌ Lỗi xoá flash sale:", error);
           toast.error(
             error.response?.data?.message || "Xoá Flash Sale thất bại!"
           );
@@ -96,43 +94,36 @@ const FlashSaleList: React.FC = () => {
         </Button>
       </div>
 
-      <Table
-        dataSource={flashSales}
-        rowKey="_id"
-        pagination={{ pageSize: 5 }}
-      >
+      <Table dataSource={flashSales} rowKey="_id" pagination={{ pageSize: 5 }}>
         <Table.Column
           title="STT"
           render={(_, __, index) => index + 1}
         />
         <Table.Column
           title="Ảnh"
-          dataIndex="product"
-          render={(product: Product) => (
-            <img
-              src={product.imageUrl[0]}
-              alt={product.title}
-              style={{ width: 60, height: 60, objectFit: "cover" }}
-            />
-          )}
+          dataIndex="products"
+          render={(products: Product[]) =>
+            products?.length > 0 ? (
+              <img
+                src={products[0].imageUrl[0]}
+                alt={products[0].title}
+                style={{ width: 60, height: 60, objectFit: "cover" }}
+              />
+            ) : (
+              "Không có ảnh"
+            )
+          }
         />
         <Table.Column
           title="Sản phẩm"
-          dataIndex="product"
-          render={(product: Product) => product.title}
-        />
-        <Table.Column
-          title="Giá sale"
-          dataIndex="salePrice"
-          render={(val: number) => val.toLocaleString() + " ₫"}
+          dataIndex="products"
+          render={(products: Product[]) =>
+            products?.map((p) => p.title).join(", ")
+          }
         />
         <Table.Column
           title="Giảm giá (%)"
           dataIndex="discountPercent"
-        />
-        <Table.Column
-          title="Số lượng"
-          dataIndex="quantity"
         />
         <Table.Column
           title="Bắt đầu"
@@ -163,7 +154,9 @@ const FlashSaleList: React.FC = () => {
             <Space>
               <Button
                 type="primary"
-                onClick={() => navigate(`/dashboard/flashsale/edit/${record._id}`)}
+                onClick={() =>
+                  navigate(`/dashboard/flashsale/edit/${record._id}`)
+                }
               >
                 Sửa
               </Button>

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
   Form,
-  Input,
   InputNumber,
   Button,
   Card,
@@ -18,15 +17,19 @@ import { toast } from "react-toastify";
 const CreateFlashSale = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
-  const [productOptions, setProductOptions] = useState([]);
+  const [productOptions, setProductOptions] = useState<any[]>([]);
+  const [variantOptions, setVariantOptions] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
+  const [loadingVariants, setLoadingVariants] = useState(false);
 
   // ✅ Gọi API lấy danh sách sản phẩm
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoadingProducts(true);
-        const { data } = await axios.get(`${import.meta.env.VITE_PUBLIC_API_URL}api/product?limit=9999`);
+        const { data } = await axios.get(
+          `${import.meta.env.VITE_PUBLIC_API_URL}api/product?limit=9999`
+        );
         setProductOptions(data.data || []);
       } catch (error) {
         message.error("Không thể tải danh sách sản phẩm");
@@ -34,76 +37,91 @@ const CreateFlashSale = () => {
         setLoadingProducts(false);
       }
     };
-
     fetchProducts();
   }, []);
 
-const onFinish = async (values: any) => {
+  // ✅ Khi chọn sản phẩm -> load danh sách biến thể
+  const handleProductChange = async (productId: string) => {
+  // Reset variant khi đổi sản phẩm
+  form.setFieldsValue({ variant: undefined });
+  if (!productId) return;
+
   try {
-    // map products sang object { product, salePrice, quantity }
-    const mappedProducts = values.products.map((id: string) => ({
-      product: id,
-      salePrice: 1, // bạn có thể thay bằng input cho từng sp nếu muốn
-      quantity: 1,  // bạn có thể thay bằng input cho từng sp nếu muốn
-    }));
+    console.log("🔹 Selected productId:", productId);
+    setLoadingVariants(true);
+    console.log("⏳ Đang gọi API lấy biến thể...");
 
-    const payload = {
-      title: values.title,
-      products: mappedProducts,
-      discountPercent: values.discountPercent,
-      startTime: values.startTime.toISOString(),
-      endTime: values.endTime.toISOString(),
-      limitQuantity: values.limitQuantity || 0,
-      isActive: values.isActive ?? true,
-    };
-
-    console.log("📤 Payload gửi đi:", payload);
-
-    await axios.post(
-      `${import.meta.env.VITE_PUBLIC_API_URL}api/flashsale`,
-      payload
+    const { data } = await axios.get(
+      `${import.meta.env.VITE_PUBLIC_API_URL}api/variants/product/${productId}/variant`
     );
 
-    toast.success("✅ Tạo Flash Sale thành công!");
-    setTimeout(() => {
-      navigate("/dashboard/flashsale");
-    }, 1500);
-  } catch (err: any) {
-    console.error("❌ Lỗi tạo Flash Sale:", err?.response?.data || err.message);
-    message.error("Tạo Flash Sale thất bại!");
+    console.log("✅ API trả về:", data);
+
+    // Nếu API trả về trực tiếp mảng variant, dùng data
+    const variants = Array.isArray(data) ? data : data.data || [];
+    setVariantOptions(variants);
+
+    console.log("🔹 Variant options set:", variants);
+  } catch (error) {
+    console.error("❌ Lỗi khi gọi API biến thể:", error);
+    message.error("Không thể tải biến thể sản phẩm");
+  } finally {
+    setLoadingVariants(false);
+    console.log("⏹️ Loading variants kết thúc");
   }
 };
+  
+  // ✅ Submit form
+  const onFinish = async (values: any) => {
+    try {
+      const payload = {
+        product: values.product,
+        variant: values.variant,
+        salePrice: values.salePrice,
+        quantity: values.quantity,
+        discountPercent: values.discountPercent,
+        startTime: values.startTime.toISOString(),
+        endTime: values.endTime.toISOString(),
+        limitQuantity: values.limitQuantity || 0,
+        isActive: values.isActive ?? true,
+      };
 
+      console.log("📤 Payload gửi đi:", payload);
+
+      await axios.post(
+        `${import.meta.env.VITE_PUBLIC_API_URL}api/flashsale`,
+        payload
+      );
+
+      toast.success("✅ Tạo Flash Sale thành công!");
+      setTimeout(() => {
+        navigate("/dashboard/flashsale");
+      }, 1500);
+    } catch (err: any) {
+      console.error("❌ Lỗi tạo Flash Sale:", err?.response?.data || err.message);
+      message.error(err?.response?.data?.message || "Tạo Flash Sale thất bại!");
+    }
+  };
 
   return (
     <div>
-      <h2 className="text-3xl font-bold text-indigo-600 mb-5">Tạo Flash Sale</h2>
+      <h2 className="text-3xl font-bold text-indigo-600 mb-5">
+        Tạo Flash Sale
+      </h2>
       <Card>
         <Form form={form} layout="vertical" onFinish={onFinish}>
+          {/* Chọn sản phẩm */}
           <Form.Item
-            label="Tên Flash Sale"
-            name="title"
-            rules={[{ required: true, message: "Vui lòng nhập tên!" }]}
-          >
-            <Input placeholder="Ví dụ: Khuyến mãi cuối tuần" />
-          </Form.Item>
-
-          <Form.Item
-            label="Chọn sản phẩm tham gia"
-            name="products"
+            label="Chọn sản phẩm"
+            name="product"
             rules={[{ required: true, message: "Vui lòng chọn sản phẩm!" }]}
           >
             <Select
-              mode="multiple"
               loading={loadingProducts}
               placeholder="Chọn sản phẩm"
-              optionFilterProp="label"
               showSearch
-              filterOption={(input, option) =>
-                (option?.label as string)
-                  .toLowerCase()
-                  .includes(input.toLowerCase())
-              }
+              optionFilterProp="label"
+              onChange={handleProductChange}
               options={productOptions.map((product: any) => ({
                 label: product.title,
                 value: product._id,
@@ -111,6 +129,43 @@ const onFinish = async (values: any) => {
             />
           </Form.Item>
 
+          {/* Chọn biến thể */}
+          <Form.Item
+            label="Chọn biến thể"
+            name="variant"
+            rules={[{ required: true, message: "Vui lòng chọn biến thể!" }]}
+          >
+            <Select
+              loading={loadingVariants}
+              placeholder="Chọn biến thể"
+              showSearch
+              optionFilterProp="label"
+              options={variantOptions.map((variant: any) => ({
+                label: `${variant.name} - ${variant.price.toLocaleString()}đ`,
+                value: variant._id,
+              }))}
+            />
+          </Form.Item>
+
+          {/* Giá flash sale */}
+          <Form.Item
+            label="Giá khuyến mãi"
+            name="salePrice"
+            rules={[{ required: true, message: "Vui lòng nhập giá!" }]}
+          >
+            <InputNumber min={1} style={{ width: "100%" }} />
+          </Form.Item>
+
+          {/* Số lượng */}
+          <Form.Item
+            label="Số lượng"
+            name="quantity"
+            rules={[{ required: true, message: "Vui lòng nhập số lượng!" }]}
+          >
+            <InputNumber min={1} style={{ width: "100%" }} />
+          </Form.Item>
+
+          {/* % giảm */}
           <Form.Item
             label="Phần trăm giảm giá"
             name="discountPercent"
@@ -119,6 +174,7 @@ const onFinish = async (values: any) => {
             <InputNumber min={1} max={100} style={{ width: "100%" }} />
           </Form.Item>
 
+          {/* Thời gian */}
           <Form.Item
             label="Thời gian bắt đầu"
             name="startTime"
@@ -135,10 +191,12 @@ const onFinish = async (values: any) => {
             <DatePicker showTime style={{ width: "100%" }} />
           </Form.Item>
 
+          {/* Giới hạn số lượng */}
           <Form.Item label="Giới hạn số lượng" name="limitQuantity">
             <InputNumber min={0} style={{ width: "100%" }} />
           </Form.Item>
 
+          {/* Active */}
           <Form.Item label="Kích hoạt" name="isActive" valuePropName="checked">
             <Switch defaultChecked />
           </Form.Item>
