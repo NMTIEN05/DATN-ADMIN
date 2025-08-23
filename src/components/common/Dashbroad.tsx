@@ -31,32 +31,32 @@ const DashLayout: React.FC = () => {
     {
       key: '/dashboard/phantich',
       icon: <AreaChartOutlined />,
-      label: 'Phân Tích',
+      label: 'Thống Kê',
     },
     {
       key: '/dashboard/users',
       icon: <UserOutlined />,
-      label: 'Người dùng',
+      label: 'Quản Lý Người dùng',
     },
     {
       key: '/dashboard/category',
       icon: <FolderOpenOutlined />,
-      label: 'Danh Mục',
+      label: 'Quản Lý Danh Mục',
     },
     {
       key: 'product-attributes',
       icon: <AppstoreOutlined />,
-      label: 'Sản Phẩm',
+      label: 'Quản Lý Sản Phẩm',
       children: [
         {
           key: '/dashboard/capacity',
           icon: <MenuUnfoldOutlined />,
-          label: 'Series Sản Phẩm',
+          label: 'Quản Lý Series Sản Phẩm',
         },
         {
       key: '/dashboard/product',
       icon: <MobileOutlined />,
-      label: 'Sản Phẩm',
+      label: 'Quản Lý Sản Phẩm',
     },
       ],
     },
@@ -64,32 +64,32 @@ const DashLayout: React.FC = () => {
     {
       key: '/dashboard/orders',
       icon: <ShoppingOutlined />,
-      label: 'Đơn Hàng',
+      label: 'Quản Lý Đơn Hàng',
     },
      {
       key: '/dashboard/vouchers',
       icon: <ShoppingOutlined />,
-      label: 'Mã Giamr Gía',
+      label: 'Quản Lý Mã Giảm Giá',
     },
     {
       key: '/dashboard/banners',
       icon: <PictureOutlined />,
-      label: 'Banner',
+      label: 'Quản Lý Banner',
     },
     {
       key: '/dashboard/flashsale',
       icon: <BgColorsOutlined />,
-      label: 'Flash Sale',
+      label: 'Quản Lý Flash Sale',
     },
     {
       key: '/dashboard/posts',
       icon: <EditOutlined />,
-      label: 'Bài Viết',
+      label: 'Quản Lý Bài Viết',
     },
     {
       key: '/dashboard/comments',
       icon: <CommentOutlined />,
-      label: 'Bình Luận',
+      label: 'Quản Lý Bình Luận',
     },
   ];
 
