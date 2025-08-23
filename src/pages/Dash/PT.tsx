@@ -146,7 +146,7 @@ const Dashboard = () => {
   );
 
 const InfoCard = ({ title, items, color, bgColor }) => (
-  <div className={`${bgColor} rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300`}>
+<div className={`${bgColor} rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300`}>
     <div className="flex items-center mb-4">
       <div className={`${color} bg-white bg-opacity-20 rounded-lg p-2 mr-3`}>
         <ProductIcon />
@@ -154,26 +154,36 @@ const InfoCard = ({ title, items, color, bgColor }) => (
       <h3 className="text-white font-semibold text-lg">{title}</h3>
     </div>
     <div className="space-y-3">
-      {items.map((item, index) => (
-        <div key={index} className="flex items-center justify-between text-white text-opacity-90">
-          <div className="flex items-center">
-            <span className="bg-white bg-opacity-20 rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold mr-3">
-              {index + 1}
-            </span>
-            <span className="text-sm">{item.displayName}</span>
+      {items.length ? (
+        items.map((item, index) => (
+          <div key={item.id || index} className="flex items-center justify-between text-white text-opacity-90">
+            <div className="flex items-center">
+              <span className="bg-white bg-opacity-20 rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold mr-3">
+                {index + 1}
+              </span>
+              <span className="text-sm">{item.displayName}</span>
+            </div>
+            <span className="text-sm font-medium">{item.displayQuantity}</span>
           </div>
-         
-        </div>
-      ))}
+        ))
+      ) : (
+        <p className="text-white text-opacity-70 text-sm italic">Không có dữ liệu</p>
+      )}
     </div>
   </div>
 );
 
 
-  const formatTopItems = (items) => {
-    return items.length
-      ? items.map((item, index) => `Top ${index + 1}: ${item.displayName}`).join(' | ')
-      : '-';
+  const formatTopItems = (res) => {
+     if (!res) return [];
+  // Nếu API trả dạng { data: [...] } thì lấy res.data
+  const items = Array.isArray(res) ? res : res.data || [];
+  return items.slice(0, 3).map((item, index) => ({
+    id: item._id || index,
+    displayName: item.title || item.name || `Sản phẩm ${index + 1}`,
+    displayQuantity:
+      item.soldCount ?? item.stock ?? item.quantity ?? 0, // tuỳ theo backend trả
+  }));
   };
 
   return (
