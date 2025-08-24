@@ -126,7 +126,7 @@ interface Order {
   shipperId?: Shipper; // ✅ Bổ sung shipperId
   cancelReason?: string; // ✅ Bổ sung cancelReason
   rejectReason?: string; // ✅ Bổ sung rejectReason
-  failReason?: string; // ✅ Bổ sung failReason
+  deliveryFailedReason?: string; // ✅ Bổ sung failReason
 }
 
 const AdminOrderList: React.FC = () => {
@@ -621,9 +621,9 @@ useEffect(() => {
                 {selectedOrder.rejectReason}
               </Descriptions.Item>
             )}
-            {selectedOrder.status === "delivery_failed" && selectedOrder.failReason && (
+            {selectedOrder.status === "delivery_failed" && selectedOrder.deliveryFailedReason && (
     <Descriptions.Item label="Lý do giao hàng thất bại">
-      {selectedOrder.failReason}
+      {selectedOrder.deliveryFailedReason}
     </Descriptions.Item>
   )}
             {selectedOrder.returnRequest?.status && (

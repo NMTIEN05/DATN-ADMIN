@@ -91,16 +91,19 @@ setOrders(filteredOrders);
     setIsModalVisible(true);
   };
 
- const handleUpdate = async () => {
+const handleUpdate = async () => {
   try {
     const values = await form.validateFields();
 
+    // Chuẩn bị payload
+    const payload: any = { status: values.status };
+    if (values.status === "delivery_failed") {
+      payload.failReason = values.failReason; // chỉ gửi khi giao thất bại
+    }
+
     await axios.put(
       `http://localhost:8888/api/shipper/${editingOrder._id}/status`,
-      {
-        status: values.status,
-        failReason: values.failReason, // 👈 gửi lên nếu có
-      },
+      payload,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -111,11 +114,12 @@ setOrders(filteredOrders);
     message.success("Cập nhật trạng thái thành công");
     fetchOrders();
     setIsModalVisible(false);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
-    message.error("Cập nhật trạng thái thất bại");
+    message.error(error?.response?.data?.message || "Cập nhật trạng thái thất bại");
   }
 };
+
 
 
   const columns = [
@@ -291,11 +295,12 @@ setOrders(filteredOrders);
         )}
 
         {/* Lý do giao hàng thất bại */}
-        {editingOrder.status === "delivery_failed" && editingOrder.failReason && (
-          <Descriptions.Item label="Lý do giao hàng không thành công">
-            {editingOrder.failReason}
-          </Descriptions.Item>
-        )}
+        {editingOrder.status === "delivery_failed" && editingOrder.deliveryFailedReason && (
+  <Descriptions.Item label="Lý do giao hàng không thành công">
+    {editingOrder.deliveryFailedReason}
+  </Descriptions.Item>
+)}
+
       </Descriptions>
 
       <h3 className="mt-4 mb-2 text-lg font-semibold">🛒 Sản phẩm</h3>
@@ -382,20 +387,21 @@ setOrders(filteredOrders);
           </span>
         </div>
 
-        {/* Nhập lý do giao hàng thất bại nếu chưa có */}
-        {editingOrder.status === "delivery_failed" && !editingOrder.failReason && (
-          <Form.Item
-            label="Lý do giao hàng không thành công"
-            name="failReason"
-            rules={[{ required: true, message: "Vui lòng nhập lý do" }]}
-          >
-            <textarea
-              rows={3}
-              placeholder="VD: Không liên lạc được, khách từ chối nhận, sai địa chỉ..."
-              className="w-full p-2 border border-gray-300 rounded"
-            />
-          </Form.Item>
-        )}
+      {editingOrder.status === "delivery_failed" && !editingOrder.deliveryFailedReason && (
+  <Form.Item
+    label="Lý do giao hàng không thành công"
+    name="failReason"
+    rules={[{ required: true, message: "Vui lòng nhập lý do" }]}
+  >
+    <textarea
+      rows={3}
+      placeholder="VD: Không liên lạc được, khách từ chối nhận, sai địa chỉ..."
+      className="w-full p-2 border border-gray-300 rounded"
+    />
+  </Form.Item>
+)}
+
+
       </div>
     </>
   )}
