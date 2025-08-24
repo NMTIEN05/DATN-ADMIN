@@ -21,6 +21,7 @@ const Dashboard = () => {
   });
 
   const [chartData, setChartData] = useState([]);
+  const [revenueData, setRevenueData] = useState([]);
   const [extraStats, setExtraStats] = useState({
     bestSellers: [],
     lowStock: [],
@@ -39,12 +40,14 @@ const Dashboard = () => {
           bestSellerRes,
           lowStockRes,
           fewStockRes,
+          revenueRes,
         ] = await Promise.all([
           fetch('http://localhost:8888/api/dashbroad/summary').then(res => res.json()),
           fetch('http://localhost:8888/api/dashbroad/monthly-orders').then(res => res.json()),
           fetch('http://localhost:8888/api/dashbroad/best-sellers').then(res => res.json()),
           fetch('http://localhost:8888/api/dashbroad/low-stock').then(res => res.json()),
           fetch('http://localhost:8888/api/dashbroad/few-stock').then(res => res.json()),
+          fetch('http://localhost:8888/api/dashbroad/monthly-revenue').then(res => res.json()),
           
         ]);
 
@@ -56,7 +59,8 @@ const Dashboard = () => {
         console.log('Few Stock:', fewStockRes);
 
         setSummary(summaryRes);
-        setChartData(chartRes);   
+        setChartData(chartRes);  
+        setRevenueData(revenueRes); 
 
         // Cải tiến function formatItems để xử lý data tốt hơn
         const formatItems = (items) => {
@@ -337,7 +341,7 @@ const InfoCard = ({ title, items, color, bgColor }) => (
               <p className="text-gray-600 text-sm">Biểu đồ vùng thể hiện xu hướng doanh thu</p>
             </div>
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={chartData}>
+              <AreaChart data={revenueData}>
                 <XAxis 
                   dataKey="month" 
                   axisLine={false}
