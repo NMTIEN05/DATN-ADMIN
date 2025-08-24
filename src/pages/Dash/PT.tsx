@@ -215,7 +215,7 @@ const InfoCard = ({ title, items, color, bgColor }) => (
       item.soldCount ?? item.stock ?? item.quantity ?? 0, // tuỳ theo backend trả
   }));
   };
-
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -371,6 +371,7 @@ const InfoCard = ({ title, items, color, bgColor }) => (
                     <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
                   </linearGradient>
                 </defs>
+                
               </AreaChart>
             </ResponsiveContainer>
           </div>

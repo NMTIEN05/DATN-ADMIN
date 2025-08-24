@@ -90,47 +90,67 @@ const EditFlashSale: React.FC = () => {
 
   // ✅ Set form khi có flashSale
   useEffect(() => {
-    if (flashSale) {
-      form.setFieldsValue({
-        product: flashSale.product?._id,
-        variant: flashSale.variant?._id,
-        salePrice: flashSale.salePrice,
-        quantity: flashSale.quantity,
-        discountPercent: flashSale.discountPercent,
-        startTime: flashSale.startTime ? dayjs(flashSale.startTime) : null,
-        endTime: flashSale.endTime ? dayjs(flashSale.endTime) : null,
-        limitQuantity: flashSale.limitQuantity ?? 0,
-        isActive: flashSale.isActive ?? true,
-      });
+  if (flashSale) {
+    // Set các field cơ bản trước
+    form.setFieldsValue({
+      product: flashSale.product?._id,
+      salePrice: flashSale.salePrice,
+      quantity: flashSale.quantity,
+      discountPercent: flashSale.discountPercent,
+      startTime: flashSale.startTime ? dayjs(flashSale.startTime) : null,
+      endTime: flashSale.endTime ? dayjs(flashSale.endTime) : null,
+      limitQuantity: flashSale.limitQuantity ?? 0,
+      isActive: flashSale.isActive ?? true,
+    });
 
-      // Load variant options cho product hiện tại
-      if (flashSale.product?._id) handleProductChange(flashSale.product._id);
+    // ✅ Load variants cho product hiện tại
+    if (flashSale.product?._id) {
+      (async () => {
+        await handleProductChange(flashSale.product._id);
+
+        // Sau khi load xong variants thì set variant
+        form.setFieldsValue({
+          variant: flashSale.variant?._id,
+        });
+      })();
     }
-  }, [flashSale]);
+  }
+}, [flashSale]);
 
   // ✅ Submit
   const onFinish = async (values: any) => {
-    try {
-      const payload = {
-        product: values.product,
-        variant: values.variant,
-        salePrice: values.salePrice,
-        quantity: values.quantity,
-        discountPercent: values.discountPercent,
-        startTime: values.startTime.toISOString(),
-        endTime: values.endTime.toISOString(),
-        limitQuantity: values.limitQuantity || 0,
-        isActive: values.isActive ?? true,
-      };
+  try {
+    const payload = {
+      product: values.product,
+      variant: values.variant,
+      salePrice: values.salePrice,
+      quantity: values.quantity,
+      discountPercent: values.discountPercent,
+      startTime: values.startTime.toISOString(),
+      endTime: values.endTime.toISOString(),
+      limitQuantity: values.limitQuantity || 0,
+      isActive: values.isActive ?? true,
+    };
 
-      await axios.put(`${import.meta.env.VITE_PUBLIC_API_URL}api/flashsale/${id}`, payload);
-      toast.success("✅ Cập nhật Flash Sale thành công!");
-      navigate("/dashboard/flashsale");
-    } catch (err: any) {
-      console.error(err?.response?.data || err.message);
-      message.error("❌ Cập nhật thất bại!");
-    }
-  };
+    const token = localStorage.getItem("token"); // 👈 Lấy token đã lưu sau khi login
+
+    await axios.put(
+      `${import.meta.env.VITE_PUBLIC_API_URL}api/flashsale/${id}`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // 👈 Gửi token vào header
+        },
+      }
+    );
+
+    toast.success("✅ Cập nhật Flash Sale thành công!");
+    navigate("/dashboard/flashsale");
+  } catch (err: any) {
+    console.error(err?.response?.data || err.message);
+    message.error("❌ Cập nhật thất bại!");
+  }
+};
 
   if (isLoading) {
     return (
