@@ -423,7 +423,7 @@ useEffect(() => {
             onClick={() => handleEditClick(record)}
             disabled={
               STATUS_FLOW[record.status]?.length === 0 ||
-              ["shipped", "delivered", "received", "delivery_failed"].includes(record.status)
+              ["ready_to_ship", "shipped", "delivered", "received", "delivery_failed"].includes(record.status)
             }
           />
         </Space>
