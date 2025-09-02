@@ -25,6 +25,8 @@ const STATUS_LABELS = {
   shipped: "Đang giao",
   delivered: "Đã giao",
   delivery_failed: "Giao thất bại",
+  return_to_store: "Hoàn trả về cửa hàng",   // 👈 thêm
+  returned_to_store: "Đã hoàn về cửa hàng", // 👈 thêm
 };
 
 const STATUS_COLORS = {
@@ -32,7 +34,10 @@ const STATUS_COLORS = {
   shipped: "purple",
   delivered: "green",
   delivery_failed: "volcano",
+  return_to_store: "orange",    // 👈 thêm
+  returned_to_store: "magenta", // 👈 thêm
 };
+
 
 
 const ShipperOrderList = () => {
@@ -65,7 +70,14 @@ const fetchOrders = async () => {
     // 👉 Lọc ra đơn "ready_to_ship" + "shipped" (nếu bạn chỉ muốn 2 trạng thái này)
 const filteredOrders = allOrders.filter(
   (order: any) =>
-    ["ready_to_ship", "shipped", "delivered", "delivery_failed"].includes(order.status)
+     [
+      "ready_to_ship",
+      "shipped",
+      "delivered",
+      "delivery_failed",
+      "return_to_store",     // 👈 thêm
+      "returned_to_store",   // 👈 thêm
+    ].includes(order.status)
 );
 setOrders(filteredOrders);
 
@@ -97,8 +109,13 @@ const handleUpdate = async () => {
 
     // Chuẩn bị payload
     const payload: any = { status: values.status };
+
     if (values.status === "delivery_failed") {
       payload.failReason = values.failReason; // chỉ gửi khi giao thất bại
+    }
+
+    if (values.status === "return_to_store") {
+      payload.returnReason = values.returnReason; // chỉ gửi khi hoàn trả
     }
 
     await axios.put(
@@ -115,10 +132,11 @@ const handleUpdate = async () => {
     fetchOrders();
     setIsModalVisible(false);
   } catch (error: any) {
-    console.error(error);
+    console.error("❌ Lỗi FE:", error.response?.data);
     message.error(error?.response?.data?.message || "Cập nhật trạng thái thất bại");
   }
 };
+
 
 
 
@@ -213,26 +231,41 @@ const handleUpdate = async () => {
       name="status"
       rules={[{ required: true, message: "Vui lòng chọn trạng thái" }]}
     >
-      <Select
-        placeholder="Chọn trạng thái"
-        onChange={(value) => {
-          setSelectedStatus(value);
-          if (value !== "delivery_failed") {
-            form.setFieldsValue({ failReason: undefined });
-          }
-        }}
-      >
-        {editingOrder?.status === "ready_to_ship" && (
-          <Option value="shipped">Đang giao</Option>
-        )}
+  <Select
+  placeholder="Chọn trạng thái"
+  onChange={(value) => {
+    setSelectedStatus(value);
 
-        {editingOrder?.status === "shipped" && (
-          <>
-            <Option value="delivered">Đã giao</Option>
-            <Option value="delivery_failed">Giao thất bại</Option>
-          </>
-        )}
-      </Select>
+    if (value !== "delivery_failed") {
+      form.setFieldsValue({ failReason: undefined });
+    }
+    if (value !== "return_to_store") {
+      form.setFieldsValue({ returnReason: undefined });
+    }
+  }}
+>
+  {editingOrder?.status === "ready_to_ship" && (
+    <Option value="shipped">Đang giao</Option>
+  )}
+
+  {editingOrder?.status === "shipped" && (
+    <>
+      <Option value="delivered">Đã giao</Option>
+      <Option value="delivery_failed">Giao thất bại</Option>
+      <Option value="return_to_store">Hoàn trả về cửa hàng</Option>
+    </>
+  )}
+
+  {editingOrder?.status === "delivery_failed" && (
+    <Option value="return_to_store">Hoàn trả về cửa hàng</Option>
+  )}
+
+  {editingOrder?.status === "return_to_store" && (
+    <Option value="returned_to_store">Đã hoàn về cửa hàng</Option>
+  )}
+</Select>
+
+
     </Form.Item>
 
     {/* ✅ Hiện ô nhập lý do nếu chọn Giao thất bại */}
@@ -284,22 +317,17 @@ const handleUpdate = async () => {
           </Tag>
         </Descriptions.Item>
 
-        {/* Thông tin Shipper */}
-        {editingOrder.shipperId && (
-          <Descriptions.Item label="Thông tin Shipper">
-            <>
-              <div><strong>Họ tên:</strong> {editingOrder.shipperId.full_name || editingOrder.shipperId.username}</div>
-              <div><strong>SĐT:</strong> {editingOrder.shipperId.phone}</div>
-            </>
-          </Descriptions.Item>
-        )}
+      
 
         {/* Lý do giao hàng thất bại */}
-        {editingOrder.status === "delivery_failed" && editingOrder.deliveryFailedReason && (
-  <Descriptions.Item label="Lý do giao hàng không thành công">
-    {editingOrder.deliveryFailedReason}
-  </Descriptions.Item>
+{/* Lý do giao hàng thất bại (hiển thị cho 3 trạng thái) */}
+{["delivery_failed", "return_to_store", "returned_to_store"].includes(editingOrder.status) &&
+  editingOrder.deliveryFailedReason && (
+    <Descriptions.Item label="Lý do giao hàng không thành công">
+      {editingOrder.deliveryFailedReason}
+    </Descriptions.Item>
 )}
+
 
       </Descriptions>
 

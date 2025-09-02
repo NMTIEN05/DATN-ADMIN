@@ -15,9 +15,19 @@ interface Product {
   imageUrl: string[];
 }
 
+interface Variant {
+  _id: string;
+  name: string;
+  price: number;
+  oldPrice: number;
+  stock: number;
+  imageUrl?: string;
+}
+
 interface FlashSale {
   _id: string;
-  products: Product[];   // ✅ BE trả về là mảng products
+  product: Product;     // ✅ chỉ 1 product
+  variant: Variant;     // ✅ chỉ 1 variant
   discountPercent: number;
   startTime: string;
   endTime: string;
@@ -89,24 +99,25 @@ const FlashSaleList: React.FC = () => {
       </h2>
 
       <div className="flex justify-between mb-5">
-        <Button type="primary" onClick={() => navigate("/dashboard/flashsale/create")}>
+        <Button
+          type="primary"
+          onClick={() => navigate("/dashboard/flashsale/create")}
+        >
           Thêm mới
         </Button>
       </div>
 
       <Table dataSource={flashSales} rowKey="_id" pagination={{ pageSize: 5 }}>
-        <Table.Column
-          title="STT"
-          render={(_, __, index) => index + 1}
-        />
+        <Table.Column title="STT" render={(_, __, index) => index + 1} />
+
         <Table.Column
           title="Ảnh"
-          dataIndex="products"
-          render={(products: Product[]) =>
-            products?.length > 0 ? (
+          dataIndex="product"
+          render={(product: Product) =>
+            product ? (
               <img
-                src={products[0].imageUrl[0]}
-                alt={products[0].title}
+                src={product.imageUrl?.[0]}
+                alt={product.title}
                 style={{ width: 60, height: 60, objectFit: "cover" }}
               />
             ) : (
@@ -114,31 +125,37 @@ const FlashSaleList: React.FC = () => {
             )
           }
         />
+
         <Table.Column
           title="Sản phẩm"
-          dataIndex="products"
-          render={(products: Product[]) =>
-            products?.map((p) => p.title).join(", ")
+          dataIndex="product"
+          render={(product: Product) => product?.title || "—"}
+        />
+
+        <Table.Column
+          title="Biến thể"
+          dataIndex="variant"
+          render={(variant: Variant) =>
+            variant ? `${variant.name} (SL: ${variant.stock})` : "—"
           }
         />
-        <Table.Column
-          title="Giảm giá (%)"
-          dataIndex="discountPercent"
-        />
+
+        <Table.Column title="Giảm giá (%)" dataIndex="discountPercent" />
+
         <Table.Column
           title="Bắt đầu"
           dataIndex="startTime"
           render={(val: string) => dayjs(val).format("DD/MM/YYYY HH:mm")}
         />
+
         <Table.Column
           title="Kết thúc"
           dataIndex="endTime"
           render={(val: string) => dayjs(val).format("DD/MM/YYYY HH:mm")}
         />
-        <Table.Column
-          title="Giới hạn"
-          dataIndex="limitQuantity"
-        />
+
+        <Table.Column title="Giới hạn" dataIndex="limitQuantity" />
+
         <Table.Column
           title="Trạng thái"
           dataIndex="isActive"
@@ -148,6 +165,7 @@ const FlashSaleList: React.FC = () => {
             </Tag>
           )}
         />
+
         <Table.Column
           title="Chức năng"
           render={(_, record: FlashSale) => (

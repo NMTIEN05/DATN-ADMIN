@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Table, Button, Popconfirm, Input, Select, Space, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
-
 import { toast } from "react-toastify";
+
 import { deleteComment, getAllComments } from "../../services/comment/comment.service";
 
 type Row = {
@@ -11,16 +11,16 @@ type Row = {
   rating?: number | null;
   createdAt: string;
   user?: { username?: string; email?: string };
-  product?: { name?: string; slug?: string };
+  product?: { title?: string; slug?: string };
 };
 
 export default function AllComments() {
-  const [rows, setRows]   = useState<Row[]>([]);
+  const [rows, setRows] = useState<Row[]>([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage]   = useState(1);
+  const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [q, setQ]         = useState("");
-  const [star, setStar]   = useState<number | undefined>(undefined);
+  const [q, setQ] = useState("");
+  const [star, setStar] = useState<number | undefined>(undefined);
   const [loading, setLoading] = useState(false);
 
   const load = async () => {
@@ -37,16 +37,21 @@ export default function AllComments() {
     }
   };
 
-  useEffect(() => { load(); }, [page, limit, star]); // q sẽ bấm Enter để tìm
+  useEffect(() => {
+    load();
+  }, [page, limit, star]); // q chỉ trigger khi bấm Enter tìm kiếm
 
-  const onSearch = () => { setPage(1); load(); };
+  const onSearch = () => {
+    setPage(1);
+    load();
+  };
 
   const onDelete = async (id: string) => {
     try {
       await deleteComment(id);
       toast.success("Đã xoá bình luận");
-      setRows(prev => prev.filter(r => r.id !== id));
-      setTotal(t => Math.max(0, t - 1));
+      setRows((prev) => prev.filter((r) => r.id !== id));
+      setTotal((t) => Math.max(0, t - 1));
     } catch (e: any) {
       console.error(e);
       toast.error(e?.response?.data?.message || "Xoá thất bại");
@@ -73,11 +78,14 @@ export default function AllComments() {
     },
     {
       title: "Sản phẩm",
-      dataIndex: ["product", "name"],
       width: 220,
-      render: (_, r) => r.product?.name || <Tag color="default">N/A</Tag>,
+      render: (_, r) => r.product?.title || <Tag color="default">N/A</Tag>,
     },
-    { title: "Nội dung", dataIndex: "content", ellipsis: true },
+    {
+      title: "Nội dung",
+      dataIndex: "content",
+      ellipsis: true,
+    },
     {
       title: "Sao",
       dataIndex: "rating",
@@ -96,7 +104,9 @@ export default function AllComments() {
           cancelText="Huỷ"
           onConfirm={() => onDelete(r.id)}
         >
-          <Button danger size="small">Xoá</Button>
+          <Button danger size="small">
+            Xoá
+          </Button>
         </Popconfirm>
       ),
     },
@@ -122,7 +132,7 @@ export default function AllComments() {
           value={star}
           onChange={(v) => setStar(v)}
           style={{ width: 120 }}
-          options={[5,4,3,2,1].map(s => ({ value: s, label: `${s} sao` }))}
+          options={[5, 4, 3, 2, 1].map((s) => ({ value: s, label: `${s} sao` }))}
         />
       </Space>
 
@@ -136,7 +146,10 @@ export default function AllComments() {
           pageSize: limit,
           total,
           showSizeChanger: true,
-          onChange: (p, ps) => { setPage(p); setLimit(ps ?? 10); },
+          onChange: (p, ps) => {
+            setPage(p);
+            setLimit(ps ?? 10);
+          },
         }}
       />
     </div>

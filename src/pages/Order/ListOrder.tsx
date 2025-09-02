@@ -32,7 +32,8 @@ const STATUS_FLOW: Record<string, string[]> = {
   shipped: ["delivered", "return_requested", "delivery_failed"],
   delivered: ["received", "return_requested"],
   received: ["return_requested"],
-
+ return_to_store: ["returned_to_store"],   // 👈 thêm
+  returned_to_store: [],                   // 👈 thêm
   return_requested: ["returned", "delivered", "rejected"],
   returned: [],
   delivery_failed: [],
@@ -48,7 +49,8 @@ const STATUS_LABELS: Record<string, string> = {
   delivered: "Đã giao",
   received: "Đã nhận hàng",
   delivery_failed: "Giao hàng thất bại",
-
+  return_to_store: "Đang hoàn về cửa hàng",   // 👈 thêm
+  returned_to_store: "Đã về cửa hàng",        // 👈 thêm
   return_requested: "Yêu cầu trả hàng",
   returned: "Đã hoàn trả",
   rejected: "Từ chối hoàn trả",
@@ -68,6 +70,8 @@ const STATUS_COLORS: Record<string, string> = {
   returned: "volcano",
   rejected: "magenta",
   cancelled: "red",
+    return_to_store: "blue",         // 👈 thêm
+  returned_to_store: "geekblue",
 };
 
 interface Variant {
@@ -423,7 +427,7 @@ useEffect(() => {
             onClick={() => handleEditClick(record)}
             disabled={
               STATUS_FLOW[record.status]?.length === 0 ||
-              ["shipped", "delivered", "received", "delivery_failed"].includes(record.status)
+              ["shipped", "delivered", "received", "delivery_failed","ready_to_ship"].includes(record.status)
             }
           />
         </Space>
@@ -621,11 +625,13 @@ useEffect(() => {
                 {selectedOrder.rejectReason}
               </Descriptions.Item>
             )}
-            {selectedOrder.status === "delivery_failed" && selectedOrder.deliveryFailedReason && (
+ {["delivery_failed", "return_to_store", "returned_to_store"].includes(selectedOrder.status) &&
+  selectedOrder.deliveryFailedReason && (
     <Descriptions.Item label="Lý do giao hàng thất bại">
       {selectedOrder.deliveryFailedReason}
     </Descriptions.Item>
-  )}
+)}
+
             {selectedOrder.returnRequest?.status && (
               <>
                 <Descriptions.Item label="Trạng thái hoàn trả">
