@@ -1,51 +1,154 @@
-// src/layouts/DashLayout.tsx
+import React, { useState } from 'react';
 import { Layout, Menu } from 'antd';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   UserOutlined,
-  VideoCameraOutlined,
-  UploadOutlined,
+  AreaChartOutlined,
+  FolderOpenOutlined,
+  MobileOutlined,
+  ShoppingOutlined,
+  EditOutlined,
+  CommentOutlined,
+  AppstoreOutlined,
+  BgColorsOutlined,
+  MenuUnfoldOutlined,
+  PictureOutlined,
 } from '@ant-design/icons';
-import React, { useState } from 'react';
 
 const { Sider, Content } = Layout;
 
-const Dashbroad: React.FC = () => {
+const DashLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const selectedKey = location.pathname;
+  const openKey = selectedKey.startsWith('/dashboard/capacity') || selectedKey.startsWith('/dashboard/color')
+    ? ['product-attributes']
+    : [];
+
+  const menuItems = [
+    {
+      key: '/dashboard/phantich',
+      icon: <AreaChartOutlined />,
+      label: 'Thống Kê',
+    },
+    {
+      key: '/dashboard/users',
+      icon: <UserOutlined />,
+      label: 'Quản Lý Người dùng',
+    },
+    {
+      key: '/dashboard/category',
+      icon: <FolderOpenOutlined />,
+      label: 'Quản Lý Danh Mục',
+    },
+    {
+      key: 'product-attributes',
+      icon: <AppstoreOutlined />,
+      label: 'Quản Lý Sản Phẩm',
+      children: [
+        {
+          key: '/dashboard/capacity',
+          icon: <MenuUnfoldOutlined />,
+          label: 'Quản Lý Series Sản Phẩm',
+        },
+        {
+      key: '/dashboard/product',
+      icon: <MobileOutlined />,
+      label: 'Quản Lý Sản Phẩm',
+    },
+      ],
+    },
+    
+    {
+      key: '/dashboard/orders',
+      icon: <ShoppingOutlined />,
+      label: 'Quản Lý Đơn Hàng',
+    },
+     {
+      key: '/dashboard/vouchers',
+      icon: <ShoppingOutlined />,
+      label: 'Quản Lý Mã Giảm Giá',
+    },
+    {
+      key: '/dashboard/banners',
+      icon: <PictureOutlined />,
+      label: 'Quản Lý Banner',
+    },
+    {
+      key: '/dashboard/flashsale',
+      icon: <BgColorsOutlined />,
+      label: 'Quản Lý Flash Sale',
+    },
+    {
+      key: '/dashboard/posts',
+      icon: <EditOutlined />,
+      label: 'Quản Lý Bài Viết',
+    },
+    {
+      key: '/dashboard/comments',
+      icon: <CommentOutlined />,
+      label: 'Quản Lý Bình Luận',
+    },
+  ];
 
   return (
-    <Layout style={{ minHeight: '100vh'  }}>
-      <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed}>
-        <div style={{ height: 60, margin: 16, background: 'rgba(255, 255, 255, 0.3)' }} />
+    <Layout style={{ minHeight: '100vh' }}>
+      <Sider
+        collapsible
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
+        width={230}
+        style={{ background: '#001529' }}
+      >
+        <div
+          style={{
+            height: 60,
+            margin: 16,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <img
+            src="http://www.datwebdigital.com/DWD/wp-content/uploads/2012/06/logo-design.jpg"
+            alt="Logo"
+            style={{
+              maxHeight: 40,
+              maxWidth: '100%',
+              objectFit: 'contain',
+            }}
+          />
+        </div>
+
         <Menu
           theme="dark"
           mode="inline"
-          defaultSelectedKeys={['/dashboard/users']}
-          onClick={({ key }) => navigate(key)}
-          items={[
-            { key: '/dashboard/users', icon: <UserOutlined />, label: 'Người dùng' },
-            { key: '/dashboard/videos', icon: <VideoCameraOutlined />, label: 'Video' },
-            { key: '/dashboard/uploads', icon: <UploadOutlined />, label: 'Upload' },
-          ]}
+          selectedKeys={[selectedKey]}
+          defaultOpenKeys={openKey}
+          onClick={({ key }) => {
+            if (!key.startsWith('/')) return;
+            navigate(key);
+          }}
+          items={menuItems}
         />
       </Sider>
 
-      <Layout style={{ flex: 1}}>
+      <Layout>
         <Content
           style={{
             padding: 16,
             background: '#fff',
             height: '100%',
-             width: '100%' ,
             overflow: 'auto',
           }}
         >
-          <Outlet/>
+          <Outlet />
         </Content>
       </Layout>
     </Layout>
   );
 };
 
-export default Dashbroad;
+export default DashLayout;
